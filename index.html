@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>一點甜品評問卷</title>
+  <style>
+    body { background: #fef7e8; font-family: sans-serif; padding: 15px; color: #444; line-height: 1.5; }
+    .container { max-width: 500px; margin: 0 auto; background: white; border-radius: 25px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; }
+    .logo { width: 120px; height: auto; margin-bottom: 10px; }
+    h1 { color: #c26e3c; font-size: 1.3rem; margin-bottom: 20px; margin-top: 5px; }
+    form { text-align: left; }
+    .q-box { background: #fffaf2; padding: 18px; border-radius: 15px; margin-bottom: 20px; border: 1px solid #f9ebda; }
+    .q-title { font-weight: bold; display: block; color: #5a3e2b; margin-bottom: 15px; font-size: 1rem; border-left: 4px solid #c26e3c; padding-left: 10px; }
+    .opt-item { display: flex; align-items: flex-start; margin-bottom: 12px; cursor: pointer; padding: 8px; border-radius: 8px; transition: 0.2s; }
+    .opt-item:hover { background: #fdf2e4; }
+    input[type="radio"] { margin-right: 12px; margin-top: 4px; transform: scale(1.3); }
+    .opt-text { font-size: 0.95rem; color: #666; }
+    select, textarea { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #ddd; margin-top: 5px; box-sizing: border-box; font-size: 1rem; }
+    button { width: 100%; padding: 16px; background: #c26e3c; color: white; border: none; border-radius: 30px; margin-top: 25px; font-weight: bold; font-size: 1.1rem; box-shadow: 0 4px 10px rgba(194,110,60,0.3); cursor: pointer; }
+    button:disabled { background: #ccc; box-shadow: none; }
+    #loading { padding: 50px; color: #c26e3c; font-weight: bold; }
+  </style>
+  <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+</head>
+<body>
+  <div class="container" id="app">
+    <div id="loading">載入問卷中...</div>
+  </div>
+
+  <script>
+    // --- 配置區 ---
+    const LIFF_ID = '你的_LIFF_ID'; 
+    const GAS_WEB_APP_URL = '你的_GAS_部署網址'; 
+
+    let userId = "";
+    let globalQuestions = [];
+    let actName = "";
+
+    async function init() {
+      try {
+        // 1. 初始化 LIFF
+        await liff.init({ liffId: LIFF_ID });
+        if (!liff.isLoggedIn()) {
+          liff.login();
+          return;
+        }
+        const profile = await liff.getProfile();
+        userId = profile.userId;
+
+        // 2. 從 GAS 抓取問卷設定
+        const response = await fetch(`${GAS_WEB_APP_URL}?action=getConfig`);
+        const config = await response.json();
+        renderForm(config);
+      } catch (err) {
+        document.getElementById('app').innerHTML = "載入失敗，請稍後再試";
+        console.error(err);
+      }
+    }
+
+    function renderForm(config) {
+      actName = config.actName;
+      globalQuestions = config.questions;
+      
+      let html = `
+        <img src="https://i.postimg.cc/SNhTdvv9/yi-dian-tian-288x.png" alt="一點甜 LOGO" class="logo">
+        <h1>${actName}</h1>
+        <form id="quiz">
+          <label>🍦 請選擇試吃品項</label>
+          <select id="flavorSelect" required>
+            ${config.flavorList.map(f => `<option value="${f}">${f}</option>`).join('')}
+          </select>
+          <div id="dynamicQuestions" style="margin-top: 25px;">
+            ${config.questions.map((q, qIdx) => `
+              <div class="q-box">
+                <span class="q-title">${qIdx + 1}. ${q.title}</span>
+                <div class="options-list">
+                  ${q.options.map((optLabel, oIdx) => `
+                    <label class="opt-item">
+                      <input type="radio" name="q${qIdx}" value="${5 - oIdx}" required>
+                      <span class="opt-text">${optLabel}</span>
+                    </label>
+                  `).join('')}
+                </div>
+              </div>
+            `).join('')}
+          </div>
+          <label>✍️ 您的具體建議</label>
+          <textarea id="comment" rows="3" placeholder="例如：甜度、份量、口感..."></textarea>
+          <button type="submit" id="subBtn">提交問卷 領優惠券</button>
+        </form>
+      `;
+      document.getElementById('app').innerHTML = html;
+
+      // 綁定提交事件
+      document.getElementById('quiz').onsubmit = submitFeedback;
+    }
+
+    async function submitFeedback(e) {
+      e.preventDefault();
+      const btn = document.getElementById('subBtn');
+      btn.disabled = true;
+      btn.innerText = "正在傳送...";
+
+      const scores = globalQuestions.map((_, idx) => {
+        return document.querySelector(`input[name="q${idx}"]:checked`).value;
+      });
+
+      const payload = {
+        action: "saveFeedback",
+        userId: userId,
+        actName: actName,
+        flavor: document.getElementById('flavorSelect').value,
+        scores: scores,
+        comment: document.getElementById('comment').value
+      };
+
+      try {
+        // 使用 POST 傳送到 GAS
+        const res = await fetch(GAS_WEB_APP_URL, {
+          method: 'POST',
+          body: JSON.stringify(payload)
+        });
+        const result = await res.json();
+        
+        if(result.status === 'success') {
+          document.body.innerHTML = '<div style="text-align:center;padding:100px 20px;background:#fef7e8;height:100vh;"><img src="https://i.postimg.cc/SNhTdvv9/yi-dian-tian-288x.png" style="width:100px;margin-bottom:20px;"><br><h2>🎉 提交成功！</h2><p>優惠券已發送到您的 LINE 視窗。<br>請回對話視窗領取！</p></div>';
+        } else {
+          alert("提交失敗：" + result.message);
+          btn.disabled = false;
+          btn.innerText = "提交問卷 領優惠券";
+        }
+      } catch (err) {
+        alert("網路錯誤，請稍後再試");
+        btn.disabled = false;
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>
