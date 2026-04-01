@@ -3,13 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>一點甜品評問卷</title>
   <style>
     body { background: #fef7e8; font-family: sans-serif; padding: 15px; color: #444; line-height: 1.5; }
     .container { max-width: 500px; margin: 0 auto; background: white; border-radius: 25px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; }
+    
+    /* LOGO 樣式 */
     .logo { width: 120px; height: auto; margin-bottom: 10px; }
+    
     h1 { color: #c26e3c; font-size: 1.3rem; margin-bottom: 20px; margin-top: 5px; }
+    
+    /* 表單對齊修正 */
     form { text-align: left; }
+    
     .q-box { background: #fffaf2; padding: 18px; border-radius: 15px; margin-bottom: 20px; border: 1px solid #f9ebda; }
     .q-title { font-weight: bold; display: block; color: #5a3e2b; margin-bottom: 15px; font-size: 1rem; border-left: 4px solid #c26e3c; padding-left: 10px; }
     .opt-item { display: flex; align-items: flex-start; margin-bottom: 12px; cursor: pointer; padding: 8px; border-radius: 8px; transition: 0.2s; }
@@ -18,125 +23,237 @@
     .opt-text { font-size: 0.95rem; color: #666; }
     select, textarea { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #ddd; margin-top: 5px; box-sizing: border-box; font-size: 1rem; }
     button { width: 100%; padding: 16px; background: #c26e3c; color: white; border: none; border-radius: 30px; margin-top: 25px; font-weight: bold; font-size: 1.1rem; box-shadow: 0 4px 10px rgba(194,110,60,0.3); cursor: pointer; }
-    button:disabled { background: #ccc; box-shadow: none; }
-    #loading { padding: 50px; color: #c26e3c; font-weight: bold; }
+    button:disabled { opacity: 0.6; cursor: not-allowed; }
+    label { font-weight: bold; color: #5a3e2b; display: block; margin-bottom: 5px; margin-top: 15px; }
+    .loading { text-align: center; padding: 40px; color: #c26e3c; }
+    .error { color: #d32f2f; background: #ffebee; padding: 15px; border-radius: 12px; margin-top: 20px; }
   </style>
-  <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 </head>
 <body>
-  <div class="container" id="app">
-    <div id="loading">載入問卷中...</div>
+  <div class="container" id="loadingContainer">
+    <img src="https://i.postimg.cc/SNhTdvv9/yi-dian-tian-288x.png" alt="一點甜 LOGO" class="logo">
+    <div class="loading">載入問卷中...</div>
+  </div>
+  
+  <div class="container" id="questionContainer" style="display:none;">
+    <img src="https://i.postimg.cc/SNhTdvv9/yi-dian-tian-288x.png" alt="一點甜 LOGO" class="logo">
+    <h1 id="actTitle">一點甜品評問卷</h1>
+    
+    <form id="quiz">
+      <label>🍦 請選擇試吃品項</label>
+      <select id="flavorSelect" required></select>
+      
+      <div id="dynamicQuestions" style="margin-top: 25px;"></div>
+
+      <label>✍️ 您的具體建議</label>
+      <textarea id="comment" rows="3" placeholder="例如：甜度、份量、口感..."></textarea>
+      
+      <button type="submit" id="subBtn">提交問卷 領優惠券</button>
+    </form>
   </div>
 
   <script>
-    // --- 配置區 ---
-    const LIFF_ID = '你的_LIFF_ID'; 
-    const GAS_WEB_APP_URL = '你的_GAS_部署網址'; 
+    let liff = null;
+    let userId = null;
+    const GAS_URL = 'Yhttps://script.google.com/macros/s/AKfycbyQVWYgnKGP-W5ddxOoLprz_f3s2rxn7HwtoeQ7KxpJ4cL_42n16Q_IP7jsoJZBa9qD/exec'; // 請替換為您的 GAS Web App URL
 
-    let userId = "";
-    let globalQuestions = [];
-    let actName = "";
-
-    async function init() {
+    async function initialize() {
       try {
-        // 1. 初始化 LIFF
-        await liff.init({ liffId: LIFF_ID });
+        // 顯示載入中
+        showLoading('初始化 LIFF...');
+        
+        // 載入 LIFF SDK
+        await loadLiffScript();
+        
+        // 初始化 LIFF
+        await liff.init({ liffId: '2009574561-O1KcpV0n' }); // 請替換為您的 LIFF ID
+        
+        // 檢查是否在 LIFF 環境中
         if (!liff.isLoggedIn()) {
+          showLoading('請先登入 LINE...');
           liff.login();
           return;
         }
+        
+        // 獲取用戶 ID
         const profile = await liff.getProfile();
         userId = profile.userId;
-
-        // 2. 從 GAS 抓取問卷設定
-        const response = await fetch(`${GAS_WEB_APP_URL}?action=getConfig`);
-        const config = await response.json();
-        renderForm(config);
-      } catch (err) {
-        document.getElementById('app').innerHTML = "載入失敗，請稍後再試";
-        console.error(err);
+        
+        // 載入問卷資料
+        await loadQuestionnaireData();
+        
+      } catch (error) {
+        console.error('初始化失敗:', error);
+        showError('初始化失敗：' + error.message);
       }
     }
-
-    function renderForm(config) {
-      actName = config.actName;
-      globalQuestions = config.questions;
-      
-      let html = `
-        <img src="https://i.postimg.cc/SNhTdvv9/yi-dian-tian-288x.png" alt="一點甜 LOGO" class="logo">
-        <h1>${actName}</h1>
-        <form id="quiz">
-          <label>🍦 請選擇試吃品項</label>
-          <select id="flavorSelect" required>
-            ${config.flavorList.map(f => `<option value="${f}">${f}</option>`).join('')}
-          </select>
-          <div id="dynamicQuestions" style="margin-top: 25px;">
-            ${config.questions.map((q, qIdx) => `
-              <div class="q-box">
-                <span class="q-title">${qIdx + 1}. ${q.title}</span>
-                <div class="options-list">
-                  ${q.options.map((optLabel, oIdx) => `
-                    <label class="opt-item">
-                      <input type="radio" name="q${qIdx}" value="${5 - oIdx}" required>
-                      <span class="opt-text">${optLabel}</span>
-                    </label>
-                  `).join('')}
-                </div>
-              </div>
-            `).join('')}
-          </div>
-          <label>✍️ 您的具體建議</label>
-          <textarea id="comment" rows="3" placeholder="例如：甜度、份量、口感..."></textarea>
-          <button type="submit" id="subBtn">提交問卷 領優惠券</button>
-        </form>
-      `;
-      document.getElementById('app').innerHTML = html;
-
-      // 綁定提交事件
-      document.getElementById('quiz').onsubmit = submitFeedback;
+    
+    function showLoading(message) {
+      document.getElementById('loadingContainer').style.display = 'block';
+      document.getElementById('questionContainer').style.display = 'none';
+      document.querySelector('.loading').innerHTML = message || '載入問卷中...';
     }
-
-    async function submitFeedback(e) {
-      e.preventDefault();
-      const btn = document.getElementById('subBtn');
-      btn.disabled = true;
-      btn.innerText = "正在傳送...";
-
-      const scores = globalQuestions.map((_, idx) => {
-        return document.querySelector(`input[name="q${idx}"]:checked`).value;
-      });
-
-      const payload = {
-        action: "saveFeedback",
-        userId: userId,
-        actName: actName,
-        flavor: document.getElementById('flavorSelect').value,
-        scores: scores,
-        comment: document.getElementById('comment').value
-      };
-
-      try {
-        // 使用 POST 傳送到 GAS
-        const res = await fetch(GAS_WEB_APP_URL, {
-          method: 'POST',
-          body: JSON.stringify(payload)
-        });
-        const result = await res.json();
+    
+    function showError(message) {
+      document.getElementById('loadingContainer').innerHTML = `
+        <img src="https://i.postimg.cc/SNhTdvv9/yi-dian-tian-288x.png" alt="一點甜 LOGO" class="logo">
+        <div class="error">❌ ${message}</div>
+        <button onclick="location.reload()" style="margin-top:20px;padding:10px 20px;background:#c26e3c;color:white;border:none;border-radius:8px;">重新載入</button>
+      `;
+    }
+    
+    function loadLiffScript() {
+      return new Promise((resolve, reject) => {
+        if (window.liff) {
+          liff = window.liff;
+          resolve();
+          return;
+        }
         
-        if(result.status === 'success') {
-          document.body.innerHTML = '<div style="text-align:center;padding:100px 20px;background:#fef7e8;height:100vh;"><img src="https://i.postimg.cc/SNhTdvv9/yi-dian-tian-288x.png" style="width:100px;margin-bottom:20px;"><br><h2>🎉 提交成功！</h2><p>優惠券已發送到您的 LINE 視窗。<br>請回對話視窗領取！</p></div>';
+        const script = document.createElement('script');
+        script.src = 'https://static.line-scdn.net/liff/edge/2.1/sdk.js';
+        script.onload = () => {
+          liff = window.liff;
+          resolve();
+        };
+        script.onerror = () => reject(new Error('LIFF SDK 載入失敗'));
+        document.head.appendChild(script);
+      });
+    }
+    
+    async function loadQuestionnaireData() {
+      try {
+        showLoading('載入問卷內容...');
+        
+        // 調用 GAS 的 API 獲取問卷資料
+        const response = await fetch(`${GAS_URL}?action=getQuestionnaire`);
+        const data = await response.json();
+        
+        if (data.success) {
+          // 顯示問卷容器
+          document.getElementById('loadingContainer').style.display = 'none';
+          document.getElementById('questionContainer').style.display = 'block';
+          
+          // 設定問卷內容
+          setupQuestionnaire(data);
         } else {
-          alert("提交失敗：" + result.message);
+          throw new Error(data.message || '獲取問卷資料失敗');
+        }
+      } catch (error) {
+        console.error('載入問卷資料失敗:', error);
+        showError('載入問卷失敗：' + error.message);
+      }
+    }
+    
+    function setupQuestionnaire(data) {
+      const { actName, flavorList, questions } = data;
+      
+      document.getElementById('actTitle').innerText = actName;
+      
+      // 設定品項選單
+      const select = document.getElementById('flavorSelect');
+      select.innerHTML = '<option value="">請選擇品項</option>';
+      flavorList.forEach(f => {
+        let opt = document.createElement('option');
+        opt.value = f; 
+        opt.innerText = f;
+        select.appendChild(opt);
+      });
+      
+      // 設定動態題目
+      const qContainer = document.getElementById('dynamicQuestions');
+      qContainer.innerHTML = '';
+      questions.forEach((q, qIdx) => {
+        let optionsHtml = q.options.map((optLabel, oIdx) => {
+          if(!optLabel) return ""; 
+          const score = 5 - oIdx; 
+          return `
+            <label class="opt-item">
+              <input type="radio" name="q${qIdx}" value="${score}" required>
+              <span class="opt-text">${escapeHtml(optLabel)}</span>
+            </label>`;
+        }).join('');
+        
+        qContainer.innerHTML += `
+          <div class="q-box">
+            <span class="q-title">${qIdx + 1}. ${escapeHtml(q.title)}</span>
+            <div class="options-list">${optionsHtml}</div>
+          </div>`;
+      });
+      
+      // 設定提交表單
+      document.getElementById('quiz').onsubmit = async function(e) {
+        e.preventDefault();
+        
+        // 驗證品項選擇
+        if (!select.value) {
+          alert('請選擇試吃品項');
+          return;
+        }
+        
+        const btn = document.getElementById('subBtn');
+        btn.disabled = true; 
+        btn.innerText = "正在傳送...";
+        
+        // 收集分數
+        const scores = questions.map((_, idx) => {
+          const checked = document.querySelector(`input[name="q${idx}"]:checked`);
+          return checked ? checked.value : "0";
+        });
+        
+        // 準備提交資料
+        const feedbackData = {
+          action: 'saveFeedback',
+          userId: userId,
+          actName: actName,
+          flavor: select.value,
+          scores: scores,
+          comment: document.getElementById('comment').value
+        };
+        
+        try {
+          // 提交到 GAS
+          const response = await fetch(GAS_URL, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(feedbackData)
+          });
+          
+          const result = await response.json();
+          
+          if (result.success) {
+            // 顯示成功訊息
+            document.body.innerHTML = `
+              <div style="text-align:center;padding:100px 20px;background:#fef7e8;height:100vh;">
+                <img src="https://i.postimg.cc/SNhTdvv9/yi-dian-tian-288x.png" style="width:100px;margin-bottom:20px;">
+                <br>
+                <h2>🎉 提交成功！</h2>
+                <p>優惠券已發送到您的 LINE 視窗。<br>請回對話視窗領取！</p>
+                <button onclick="liff.closeWindow()" style="margin-top:30px;padding:12px 24px;background:#c26e3c;color:white;border:none;border-radius:8px;">關閉視窗</button>
+              </div>`;
+          } else {
+            throw new Error(result.message || '提交失敗');
+          }
+        } catch (error) {
+          console.error('提交失敗:', error);
           btn.disabled = false;
           btn.innerText = "提交問卷 領優惠券";
+          alert('提交失敗，請稍後再試：' + error.message);
         }
-      } catch (err) {
-        alert("網路錯誤，請稍後再試");
-        btn.disabled = false;
-      }
+      };
     }
-
-    init();
+    
+    // 防止 XSS 攻擊
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+    
+    // 開始初始化
+    initialize();
   </script>
 </body>
 </html>
