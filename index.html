@@ -139,8 +139,16 @@
             font-weight: bold;
             color: #667eea;
         }
+        .debug-info {
+            font-size: 12px;
+            color: #999;
+            margin-top: 20px;
+            padding: 10px;
+            background: #f5f5f5;
+            border-radius: 8px;
+            word-break: break-all;
+        }
     </style>
-    <script src="https://static.line-sdk.net/liff/edge/2/sdk.js"></script>
 </head>
 <body>
     <div class="container">
@@ -150,10 +158,10 @@
         </div>
         <div class="content">
             <div id="message" class="message"></div>
-            <div id="userInfo" class="user-info">載入中...</div>
+            <div id="userInfo" class="user-info">正在初始化...</div>
             <div id="loading" class="loading">
                 <div class="spinner"></div>
-                <p style="margin-top: 10px;">載入問卷中...</p>
+                <p style="margin-top: 10px;">載入中...</p>
             </div>
             <form id="surveyForm" style="display: none;">
                 <div id="activityName" class="activity-name"></div>
@@ -202,6 +210,7 @@
 
                 <button type="button" id="submitBtn">提交問卷 🎁</button>
             </form>
+            <div id="debug" class="debug-info" style="display:none;"></div>
         </div>
     </div>
 
@@ -212,35 +221,128 @@
         
         let userId = null;
         let questionData = null;
+        let liffInitialized = false;
+
+        // 顯示除錯訊息
+        function debugLog(msg) {
+            console.log(msg);
+            const debugDiv = document.getElementById('debug');
+            if (debugDiv) {
+                debugDiv.innerHTML += new Date().toLocaleTimeString() + ': ' + msg + '<br>';
+                debugDiv.style.display = 'block';
+            }
+        }
+
+        // 動態加載LIFF SDK
+        function loadLiffSDK() {
+            return new Promise((resolve, reject) => {
+                // 如果已經有liff物件，直接resolve
+                if (typeof liff !== 'undefined' && liff) {
+                    debugLog('LIFF SDK 已存在');
+                    resolve();
+                    return;
+                }
+                
+                // 嘗試多個CDN來源
+                const cdnUrls = [
+                    'https://static.line-sdk.net/liff/edge/2/sdk.js',
+                    'https://cdn.jsdelivr.net/npm/@line/liff@2.23.1/dist/liff.js',
+                    'https://unpkg.com/@line/liff@2.23.1/dist/liff.js'
+                ];
+                
+                let currentIndex = 0;
+                
+                function loadNext() {
+                    if (currentIndex >= cdnUrls.length) {
+                        reject(new Error('所有CDN都無法加載LIFF SDK'));
+                        return;
+                    }
+                    
+                    const url = cdnUrls[currentIndex];
+                    debugLog(`嘗試加載 LIFF SDK: ${url}`);
+                    
+                    const script = document.createElement('script');
+                    script.src = url;
+                    script.onload = () => {
+                        debugLog(`成功加載: ${url}`);
+                        resolve();
+                    };
+                    script.onerror = () => {
+                        debugLog(`加載失敗: ${url}`);
+                        currentIndex++;
+                        loadNext();
+                    };
+                    document.head.appendChild(script);
+                }
+                
+                loadNext();
+            });
+        }
 
         // 初始化LIFF
         async function initLIFF() {
             try {
-                await liff.init({ liffId: LIFF_ID });
+                debugLog('開始初始化LIFF...');
                 
+                // 先加載SDK
+                await loadLiffSDK();
+                
+                // 等待liff物件可用
+                let retryCount = 0;
+                while (typeof liff === 'undefined' && retryCount < 10) {
+                    await new Promise(r => setTimeout(r, 100));
+                    retryCount++;
+                }
+                
+                if (typeof liff === 'undefined') {
+                    throw new Error('liff物件不存在');
+                }
+                
+                debugLog('LIFF SDK加載完成，開始初始化...');
+                await liff.init({ liffId: LIFF_ID });
+                debugLog('LIFF初始化成功');
+                
+                // 檢查登入狀態
                 if (!liff.isLoggedIn()) {
+                    debugLog('未登入，跳轉登入頁面');
                     liff.login();
                     return;
                 }
                 
+                // 獲取用戶資料
                 const profile = await liff.getProfile();
                 userId = profile.userId;
-                document.getElementById('userInfo').innerHTML = `👤 已登入 - ID: ${userId.substring(0, 10)}...`;
+                debugLog(`用戶ID: ${userId}`);
+                document.getElementById('userInfo').innerHTML = `✅ 已登入 - ID: ${userId.substring(0, 10)}...`;
                 
+                liffInitialized = true;
+                
+                // 載入問卷資料
                 await loadQuestions();
                 
             } catch (error) {
+                debugLog(`LIFF初始化失敗: ${error.message}`);
                 console.error('LIFF初始化失敗:', error);
-                document.getElementById('userInfo').innerHTML = '❌ 初始化失敗，請在LINE中開啟';
-                showMessage('請在LINE中開啟此問卷', 'error');
+                document.getElementById('userInfo').innerHTML = '⚠️ 初始化失敗，請重新開啟頁面';
+                showMessage('請確認網路連線後重新整理頁面', 'error');
+                
+                // 顯示重新整理按鈕
+                const loadingDiv = document.getElementById('loading');
+                loadingDiv.innerHTML = `
+                    <p style="color: red; margin-bottom: 20px;">初始化失敗: ${error.message}</p>
+                    <button onclick="location.reload()" style="background: #667eea; color: white; padding: 12px 24px; border: none; border-radius: 8px;">重新整理</button>
+                `;
             }
         }
 
         // 載入問卷選項
         async function loadQuestions() {
             try {
+                debugLog('載入問卷資料...');
                 const response = await fetch(API_URL);
                 const result = await response.json();
+                
+                debugLog(`API回應: ${JSON.stringify(result).substring(0, 200)}`);
                 
                 if (!result.success) {
                     throw new Error(result.error);
@@ -307,10 +409,12 @@
                 
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('surveyForm').style.display = 'block';
+                debugLog('問卷載入完成');
                 
             } catch (error) {
+                debugLog(`載入問卷失敗: ${error.message}`);
                 console.error('載入失敗:', error);
-                document.getElementById('loading').innerHTML = '<p style="color:red;">載入問卷失敗，請重新整理</p>';
+                document.getElementById('loading').innerHTML = `<p style="color:red;">載入問卷失敗: ${error.message}<br>請確認GAS部署網址正確</p>`;
                 showMessage('載入問卷失敗: ' + error.message, 'error');
             }
         }
@@ -359,6 +463,8 @@
                 age: document.getElementById('age').value
             };
             
+            debugLog(`提交資料: ${JSON.stringify(formData)}`);
+            
             const btn = document.getElementById('submitBtn');
             btn.disabled = true;
             btn.textContent = '提交中...';
@@ -372,11 +478,12 @@
                 });
                 
                 const result = await response.json();
+                debugLog(`提交回應: ${JSON.stringify(result)}`);
                 
                 if (result.success) {
                     showMessage('提交成功！優惠券已發送至您的LINE聊天室 🎉', 'success');
                     setTimeout(() => {
-                        if (liff.isInClient()) {
+                        if (liffInitialized && liff.isInClient()) {
                             liff.closeWindow();
                         } else {
                             window.location.reload();
@@ -386,6 +493,7 @@
                     throw new Error(result.error);
                 }
             } catch (error) {
+                debugLog(`提交失敗: ${error.message}`);
                 showMessage('提交失敗：' + error.message, 'error');
                 btn.disabled = false;
                 btn.textContent = '提交問卷 🎁';
