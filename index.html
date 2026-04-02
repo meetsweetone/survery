@@ -7,7 +7,7 @@
     body { background: #fef7e8; font-family: sans-serif; padding: 15px; color: #444; line-height: 1.5; }
     .container { max-width: 500px; margin: 0 auto; background: white; border-radius: 25px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; }
     .logo { width: 120px; height: auto; margin-bottom: 10px; }
-    h1 { color: #c26e3c; font-size: 1.3rem; margin-bottom: 20px; margin-top: 5px; }
+    h1 { color: #c26e3c; font-size: 1.2rem; margin-bottom: 20px; margin-top: 5px; }
     form { text-align: left; }
     .q-box { background: #fffaf2; padding: 18px; border-radius: 15px; margin-bottom: 20px; border: 1px solid #f9ebda; }
     .q-title { font-weight: bold; display: block; color: #5a3e2b; margin-bottom: 15px; font-size: 1rem; border-left: 4px solid #c26e3c; padding-left: 10px; }
@@ -17,15 +17,17 @@
     .opt-text { font-size: 0.95rem; color: #666; }
     select, textarea { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #ddd; margin-top: 5px; box-sizing: border-box; font-size: 1rem; }
     button { width: 100%; padding: 16px; background: #c26e3c; color: white; border: none; border-radius: 30px; margin-top: 25px; font-weight: bold; font-size: 1.1rem; cursor: pointer; }
+    button:disabled { background: #ccc; }
     label { font-weight: bold; color: #5a3e2b; display: block; margin-bottom: 5px; margin-top: 15px; }
-    .loading { padding: 40px 0; }
+    #loading { padding: 50px 0; }
   </style>
 </head>
 <body>
 
   <div class="container" id="loading">
     <img src="https://i.postimg.cc/SNhTdvv9/yi-dian-tian-288x.png" class="logo">
-    <p>正在載入問卷...</p>
+    <p>正在為生活加入一點甜...</p>
+    <small id="errorMsg" style="color:red; display:none;"><br>連線較慢，請稍候或重新開啟</small>
   </div>
 
   <div class="container" id="main" style="display:none">
@@ -34,88 +36,126 @@
     <form id="quiz">
       <label>🍦 請選擇試吃品項</label>
       <select id="flavorSelect" required></select>
+      
       <div id="dynamicQuestions" style="margin-top:25px"></div>
+
       <label>✍️ 您的具體建議</label>
       <textarea id="comment" rows="3" placeholder="例如：甜度、份量、口感..."></textarea>
+      
       <button type="submit" id="subBtn">提交問卷 領優惠券</button>
     </form>
   </div>
 
+  <script src="https://static.line-scdn.net/liff/edge/2.1/sdk.js"></script>
   <script>
     const GAS_URL = "https://script.google.com/macros/s/AKfycbyQVWYgnKGP-W5ddxOoLprz_f3s2rxn7HwtoeQ7KxpJ4cL_42n16Q_IP7jsoJZBa9qD/exec";
+    const LIFF_ID = "2009574561-O1KcpV0n";
     let userId = "guest";
-    let actName = "";
-    let questions = [];
+    let questionsData = [];
 
-    async function initLiff() {
+    // 1. 初始化 LIFF
+    async function init() {
       try {
-        const script = document.createElement('script');
-        script.src = 'https://static.line-scdn.net/liff/edge/2.1/sdk.js';
-        await new Promise(res => script.onload = res);
-        await liff.init({ liffId: "2009574561-O1KcpV0n" });
-        if (liff.isLoggedIn()) {
-          const p = await liff.getProfile();
-          userId = p.userId;
-        } else {
+        await liff.init({ liffId: LIFF_ID });
+        if (!liff.isLoggedIn()) {
           liff.login();
+          return;
         }
-      } catch (e) {}
+        const profile = await liff.getProfile();
+        userId = profile.userId;
+        loadSurvey(); // 登入成功後載入問卷
+      } catch (e) {
+        console.error("LIFF Error", e);
+        loadSurvey(); // 失敗也嘗試載入（訪客模式）
+      }
     }
 
+    // 2. 載入問卷
     async function loadSurvey() {
-      const res = await fetch(GAS_URL + "?action=getSurvey");
-      const data = await res.json();
-      actName = data.actName;
-      questions = data.questions;
+      try {
+        // 加上 action=getQuestionnaire 與時間戳
+        const res = await fetch(`${GAS_URL}?action=getQuestionnaire&t=${Date.now()}`);
+        const data = await res.json();
+        
+        if (!data.success) throw new Error("GAS回傳失敗");
 
-      document.getElementById('actTitle').innerText = actName;
-      const f = document.getElementById('flavorSelect');
-      data.flavorList.forEach(x => {
-        const o = document.createElement('option');
-        o.value = x; o.innerText = x;
-        f.appendChild(o);
-      });
+        document.getElementById('actTitle').innerText = data.actName;
+        questionsData = data.questions;
 
-      const qc = document.getElementById('dynamicQuestions');
-      questions.forEach((q, i) => {
-        const opts = q.options.map((opt, j) => {
-          const score = 5 - j;
-          return `<label class="opt-item"><input type="radio" name="q${i}" value="${score}" required><span class="opt-text">${opt}</span></label>`;
-        }).join('');
-        qc.innerHTML += `<div class="q-box"><span class="q-title">${i+1}. ${q.title}</span>${opts}</div>`;
-      });
+        // 品項選單
+        const f = document.getElementById('flavorSelect');
+        f.innerHTML = '<option value="">請選擇品項</option>';
+        data.flavorList.forEach(x => {
+          const o = document.createElement('option');
+          o.value = x; o.innerText = x;
+          f.appendChild(o);
+        });
 
-      document.getElementById('loading').style.display = 'none';
-      document.getElementById('main').style.display = 'block';
+        // 動態題目
+        const qc = document.getElementById('dynamicQuestions');
+        questionsData.forEach((q, i) => {
+          const opts = q.options.map((opt, j) => {
+            const score = 5 - j;
+            return `<label class="opt-item"><input type="radio" name="q${i}" value="${score}" required><span class="opt-text">${opt}</span></label>`;
+          }).join('');
+          qc.innerHTML += `<div class="q-box"><span class="q-title">${i+1}. ${q.title}</span>${opts}</div>`;
+        });
+
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('main').style.display = 'block';
+      } catch (e) {
+        console.error("Load Error", e);
+        document.getElementById('errorMsg').style.display = 'block';
+      }
     }
 
+    // 3. 提交問卷
     document.getElementById('quiz').onsubmit = async (e) => {
       e.preventDefault();
       const btn = document.getElementById('subBtn');
-      btn.disabled = true; btn.innerText = "送出中...";
+      btn.disabled = true; 
+      btn.innerText = "傳送中，請勿關閉...";
 
-      const scores = questions.map((_, i) => {
+      const scores = questionsData.map((_, i) => {
         const c = document.querySelector(`input[name="q${i}"]:checked`);
         return c ? c.value : "0";
       });
 
-      await fetch(GAS_URL, {
-        method: 'POST',
-        body: JSON.stringify({
-          userId, actName,
-          flavor: document.getElementById('flavorSelect').value,
-          scores,
-          comment: document.getElementById('comment').value
-        })
-      });
+      const payload = {
+        action: 'saveFeedback',
+        userId: userId,
+        actName: document.getElementById('actTitle').innerText,
+        flavor: document.getElementById('flavorSelect').value,
+        scores: scores,
+        comment: document.getElementById('comment').value
+      };
 
-      document.body.innerHTML = `<div style='text-align:center;padding:100px 20px;background:#fef7e8'><img src='https://i.postimg.cc/SNhTdvv9/yi-dian-tian-288x.png' style='width:100px'><br><h2>🎉 提交成功！</h2><p>優惠券已發送</p></div>`;
+      try {
+        // 使用 no-cors 解決 302 重導向問題
+        await fetch(GAS_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'text/plain' },
+          body: JSON.stringify(payload)
+        });
+
+        // 顯示成功
+        document.body.innerHTML = `
+          <div style='text-align:center;padding:100px 20px;background:#fef7e8;min-height:100vh'>
+            <img src='https://i.postimg.cc/SNhTdvv9/yi-dian-tian-288x.png' style='width:100px'>
+            <br><h2 style='color:#c26e3c'>🎉 提交成功！</h2>
+            <p>感謝您的回饋，<br>優惠券已發送到您的 LINE 視窗。</p>
+            <button onclick="liff.closeWindow()" style="margin-top:20px; padding:10px 20px; background:#c26e3c; color:#fff; border:none; border-radius:10px;">關閉問卷</button>
+          </div>`;
+      } catch (error) {
+        alert("提交異常，請檢查網路連線");
+        btn.disabled = false;
+        btn.innerText = "提交問卷 領優惠券";
+      }
     };
 
-    (async () => {
-      await initLiff();
-      await loadSurvey();
-    })();
+    // 啟動
+    init();
   </script>
 </body>
 </html>
