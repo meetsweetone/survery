@@ -362,19 +362,18 @@
           return checked ? checked.value : "0";
         });
         
-        try {
-          const response = await fetch(GAS_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              action: 'saveFeedback',
-              userId: userId,
-              actName: actName,
-              flavor: select.value,
-              scores: scores,
-              comment: document.getElementById('comment').value
-            })
-          });
+       try {
+  const response = await fetch(GAS_URL, {
+    method: 'POST',
+    body: JSON.stringify({
+      action: 'saveFeedback',
+      userId: userId || "guest",
+      actName: actName,
+      flavor: select.value,
+      scores: scores,
+      comment: document.getElementById('comment').value
+    })
+  });
           
           const result = await response.json();
           
