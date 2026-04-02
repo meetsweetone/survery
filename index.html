@@ -4,9 +4,131 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    body { background: #fef7e8; font-family: sans-serif; padding: 15px; color: #444; line-height: 1.5; }
-    .container { max-width: 500px; margin: 0 auto; background: white; border-radius: 25px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; }
-    .logo { width: 120px; height: auto; margin-bottom: 10px; }
+    body { 
+      background: #fef7e8; 
+      font-family: sans-serif; 
+      padding: 15px; 
+      color: #444; 
+      line-height: 1.5; 
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .container { 
+      max-width: 500px; 
+      margin: 0 auto; 
+      background: white; 
+      border-radius: 25px; 
+      padding: 40px 20px; 
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
+      text-align: center; 
+    }
+    
+    .logo { 
+      width: 120px; 
+      height: auto; 
+      margin-bottom: 20px; 
+      animation: gentleFloat 2s ease-in-out infinite;
+    }
+    
+    @keyframes gentleFloat {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-8px); }
+    }
+    
+    /* 甜甜圈動畫 */
+    .donut {
+      width: 60px;
+      height: 60px;
+      margin: 20px auto;
+      position: relative;
+    }
+    
+    .donut:before {
+      content: '';
+      display: block;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      border: 6px solid #f9ebda;
+      border-top-color: #c26e3c;
+      animation: spin 0.8s linear infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    /* 小愛心飄落 */
+    .hearts {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 999;
+      overflow: hidden;
+    }
+    
+    .heart {
+      position: absolute;
+      font-size: 20px;
+      color: #c26e3c;
+      opacity: 0.6;
+      animation: floatUp 4s ease-out forwards;
+    }
+    
+    @keyframes floatUp {
+      0% {
+        transform: translateY(100vh) rotate(0deg);
+        opacity: 0.6;
+      }
+      100% {
+        transform: translateY(-20vh) rotate(360deg);
+        opacity: 0;
+      }
+    }
+    
+    .loading-text {
+      font-size: 1.1rem;
+      color: #c26e3c;
+      margin-top: 20px;
+      font-weight: 500;
+      min-height: 70px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+    }
+    
+    .loading-sub {
+      font-size: 0.85rem;
+      color: #aaa;
+      margin-top: 8px;
+    }
+    
+    .dot-floating {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: #c26e3c;
+      margin: 0 3px;
+      animation: dotPulse 1.4s ease-in-out infinite;
+    }
+    
+    .dot-floating:nth-child(1) { animation-delay: 0s; }
+    .dot-floating:nth-child(2) { animation-delay: 0.2s; }
+    .dot-floating:nth-child(3) { animation-delay: 0.4s; }
+    
+    @keyframes dotPulse {
+      0%, 60%, 100% { transform: scale(0.6); opacity: 0.4; }
+      30% { transform: scale(1.2); opacity: 1; }
+    }
+    
     h1 { color: #c26e3c; font-size: 1.3rem; margin-bottom: 20px; margin-top: 5px; }
     form { text-align: left; }
     .q-box { background: #fffaf2; padding: 18px; border-radius: 15px; margin-bottom: 20px; border: 1px solid #f9ebda; }
@@ -19,146 +141,197 @@
     button { width: 100%; padding: 16px; background: #c26e3c; color: white; border: none; border-radius: 30px; margin-top: 25px; font-weight: bold; font-size: 1.1rem; cursor: pointer; transition: opacity 0.2s; }
     button:disabled { opacity: 0.6; cursor: not-allowed; }
     label { font-weight: bold; color: #5a3e2b; display: block; margin-bottom: 5px; margin-top: 15px; }
-    .skeleton { background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: loading 1.5s infinite; border-radius: 12px; }
-    @keyframes loading { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
-    .skeleton-item { height: 50px; margin: 10px 0; border-radius: 12px; }
-    .skeleton-title { height: 24px; width: 60%; margin-bottom: 15px; }
   </style>
 </head>
 <body>
-  <div class="container" id="app">
-    <!-- 骨架屏 -->
-    <div id="skeletonScreen">
-      <img src="https://i.postimg.cc/SNhTdvv9/yi-dian-tian-288x.png" alt="一點甜 LOGO" class="logo">
-      <div class="skeleton skeleton-title" style="margin: 20px auto;"></div>
-      <div class="skeleton skeleton-item"></div>
-      <div class="skeleton skeleton-item"></div>
-      <div class="skeleton skeleton-item"></div>
-    </div>
-    
-    <!-- 問卷內容 -->
-    <div id="questionContent" style="display:none;">
-      <img src="https://i.postimg.cc/SNhTdvv9/yi-dian-tian-288x.png" alt="一點甜 LOGO" class="logo">
-      <h1 id="actTitle">一點甜品評問卷</h1>
-      
-      <form id="quiz">
-        <label>🍦 請選擇試吃品項</label>
-        <select id="flavorSelect" required>
-          <option value="">請選擇品項</option>
-        </select>
-        
-        <div id="dynamicQuestions" style="margin-top: 25px;"></div>
+  <!-- 飄浮愛心容器 -->
+  <div class="hearts" id="heartsContainer"></div>
 
-        <label>✍️ 您的具體建議</label>
-        <textarea id="comment" rows="3" placeholder="例如：甜度、份量、口感..."></textarea>
-        
-        <button type="submit" id="subBtn">提交問卷 領優惠券</button>
-      </form>
+  <div class="container" id="loadingContainer">
+    <img src="https://i.postimg.cc/SNhTdvv9/yi-dian-tian-288x.png" alt="一點甜 LOGO" class="logo">
+    <div class="donut"></div>
+    <div class="loading-text" id="loadingText">
+      <span id="mainMessage">正在為你的生活，加入一點甜...</span>
+      <div class="dot-floating"></div>
+      <div class="dot-floating"></div>
+      <div class="dot-floating"></div>
     </div>
+    <div class="loading-sub" id="subMessage">捕捉今日份的甜，請稍候片刻</div>
+  </div>
+  
+  <div class="container" id="questionContainer" style="display:none;">
+    <img src="https://i.postimg.cc/SNhTdvv9/yi-dian-tian-288x.png" alt="一點甜 LOGO" class="logo">
+    <h1 id="actTitle">一點甜品評問卷</h1>
+    
+    <form id="quiz">
+      <label>🍦 請選擇試吃品項</label>
+      <select id="flavorSelect" required></select>
+      
+      <div id="dynamicQuestions" style="margin-top: 25px;"></div>
+
+      <label>✍️ 您的具體建議</label>
+      <textarea id="comment" rows="3" placeholder="例如：甜度、份量、口感..."></textarea>
+      
+      <button type="submit" id="subBtn">提交問卷 領優惠券</button>
+    </form>
   </div>
 
   <script>
     let userId = null;
     let liff = null;
+    let heartInterval = null;
+    let textInterval = null;
+    
     const GAS_URL = 'https://script.google.com/macros/s/AKfycbyQVWYgnKGP-W5ddxOoLprz_f3s2rxn7HwtoeQ7KxpJ4cL_42n16Q_IP7jsoJZBa9qD/exec';
     const LIFF_ID = '2009574561-O1KcpV0n';
     
-    // 顯示問卷內容
-    function showQuestionnaire() {
-      document.getElementById('skeletonScreen').style.display = 'none';
-      document.getElementById('questionContent').style.display = 'block';
+    // 可愛文案庫
+    const mainMessages = [
+      "正在為你的生活，加入一點甜...",
+      "捕捉今日份的甜，請稍候片刻...",
+      "心意準備中，等等來點甜的吧！",
+      "攪拌一點糖霜，灑上幸福...",
+      "烘焙師正在準備驚喜...",
+      "甜甜的空氣正在醞釀...",
+      "為你特製一份甜蜜問卷...",
+      "糖分加載中，請深呼吸...",
+    ];
+    
+    const subMessages = [
+      "捕捉今日份的甜，請稍候片刻",
+      "偷偷加了一匙幸福感",
+      "問卷正在發酵中～",
+      "再一下下就好！",
+      "耐心等待會更甜喔",
+      "正在打包你的優惠券",
+      "快準備好你的甜點雷達",
+    ];
+    
+    // 隨機更換文案
+    function startMessageRotation() {
+      textInterval = setInterval(() => {
+        const randomMain = mainMessages[Math.floor(Math.random() * mainMessages.length)];
+        const randomSub = subMessages[Math.floor(Math.random() * subMessages.length)];
+        
+        const mainEl = document.getElementById('mainMessage');
+        const subEl = document.getElementById('subMessage');
+        
+        if (mainEl) {
+          mainEl.style.opacity = '0';
+          setTimeout(() => {
+            mainEl.innerText = randomMain;
+            mainEl.style.opacity = '1';
+          }, 300);
+        }
+        
+        if (subEl) {
+          subEl.style.opacity = '0';
+          setTimeout(() => {
+            subEl.innerText = randomSub;
+            subEl.style.opacity = '1';
+          }, 300);
+        }
+      }, 3500);
     }
     
-    // 載入 LIFF SDK (非阻塞)
-    function loadLiffSDK() {
-      return new Promise((resolve) => {
-        if (window.liff) {
-          liff = window.liff;
-          resolve();
+    // 產生飄浮愛心
+    function createHeart() {
+      const heart = document.createElement('div');
+      heart.className = 'heart';
+      heart.innerHTML = ['❤️', '🧡', '💛', '💖', '🍰', '🍩', '🍪'][Math.floor(Math.random() * 7)];
+      heart.style.left = Math.random() * 100 + '%';
+      heart.style.fontSize = (Math.random() * 20 + 15) + 'px';
+      heart.style.animationDuration = (Math.random() * 3 + 3) + 's';
+      heart.style.animationDelay = Math.random() * 2 + 's';
+      
+      document.getElementById('heartsContainer').appendChild(heart);
+      
+      setTimeout(() => {
+        heart.remove();
+      }, 5000);
+    }
+    
+    function startHearts() {
+      heartInterval = setInterval(createHeart, 800);
+    }
+    
+    function stopAnimations() {
+      if (heartInterval) clearInterval(heartInterval);
+      if (textInterval) clearInterval(textInterval);
+      const heartsContainer = document.getElementById('heartsContainer');
+      if (heartsContainer) heartsContainer.innerHTML = '';
+    }
+    
+    async function initialize() {
+      try {
+        startHearts();
+        startMessageRotation();
+        
+        await loadLiffScript();
+        
+        document.querySelector('.donut').style.display = 'block';
+        
+        await liff.init({ liffId: LIFF_ID });
+        
+        if (!liff.isLoggedIn()) {
+          liff.login();
           return;
         }
         
-        const script = document.createElement('script');
-        script.src = 'https://static.line-scdn.net/liff/edge/2.1/sdk.js';
-        script.onload = () => {
-          liff = window.liff;
-          resolve();
-        };
-        script.onerror = () => {
-          console.warn('LIFF SDK 載入失敗，使用測試模式');
-          resolve(); // 即使失敗也繼續，讓測試模式可運作
-        };
-        document.head.appendChild(script);
+        const profile = await liff.getProfile();
+        userId = profile.userId;
         
-        // 5秒超時，避免卡住
-        setTimeout(resolve, 5000);
-      });
-    }
-    
-    // 獲取用戶 ID (帶超時)
-    async function getUserId() {
-      try {
-        if (!liff) return null;
+        await loadQuestionnaireData();
         
-        const initPromise = liff.init({ liffId: LIFF_ID });
-        const timeoutPromise = new Promise((resolve) => setTimeout(() => resolve(null), 3000));
-        
-        await Promise.race([initPromise, timeoutPromise]);
-        
-        if (liff.isLoggedIn && liff.isLoggedIn()) {
-          const profile = await liff.getProfile();
-          return profile.userId;
-        }
-        return null;
-      } catch (e) {
-        console.warn('獲取用戶 ID 失敗:', e);
-        return null;
-      }
-    }
-    
-    // 載入問卷資料 (直接從 GAS 獲取)
-    async function loadQuestionnaire() {
-      try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 8000);
-        
-       const response = await fetch(`${GAS_URL}?action=getQuestionnaire&t=${Date.now()}`, {
-  signal: controller.signal
-});
-        clearTimeout(timeoutId);
-        
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        
-        const data = await response.json();
-        
-        if (data.success) {
-          renderQuestionnaire(data);
-          showQuestionnaire();
-        } else {
-          throw new Error(data.message || '問卷資料錯誤');
-        }
       } catch (error) {
-        console.error('載入問卷失敗:', error);
-        document.getElementById('skeletonScreen').innerHTML = `
+        console.error('初始化失敗:', error);
+        stopAnimations();
+        document.getElementById('loadingContainer').innerHTML = `
           <img src="https://i.postimg.cc/SNhTdvv9/yi-dian-tian-288x.png" alt="一點甜 LOGO" class="logo">
-          <div style="color:#d32f2f; padding:20px;">❌ 載入失敗: ${error.message}</div>
+          <div style="color:#d32f2f; padding:20px;">❌ ${error.message}</div>
           <button onclick="location.reload()" style="margin-top:20px;padding:10px 20px;background:#c26e3c;color:white;border:none;border-radius:8px;">重新載入</button>
         `;
       }
     }
     
-    // 渲染問卷
-    function renderQuestionnaire(data) {
-      const { actName, flavorList, questions } = data;
+    function loadLiffScript() {
+      return new Promise((resolve, reject) => {
+        if (window.liff) {
+          liff = window.liff;
+          resolve();
+          return;
+        }
+        const script = document.createElement('script');
+        script.src = 'https://static.line-scdn.net/liff/edge/2.1/sdk.js';
+        script.onload = () => { liff = window.liff; resolve(); };
+        script.onerror = () => reject(new Error('LIFF SDK 載入失敗'));
+        document.head.appendChild(script);
+      });
+    }
+    
+    async function loadQuestionnaireData() {
+      const response = await fetch(`${GAS_URL}?action=getQuestionnaire&t=${Date.now()}`);
+      const data = await response.json();
       
+      if (data.success) {
+        stopAnimations();
+        document.getElementById('loadingContainer').style.display = 'none';
+        document.getElementById('questionContainer').style.display = 'block';
+        setupQuestionnaire(data);
+      } else {
+        throw new Error(data.message);
+      }
+    }
+    
+    function setupQuestionnaire(data) {
+      const { actName, flavorList, questions } = data;
       document.getElementById('actTitle').innerText = actName;
       
       const select = document.getElementById('flavorSelect');
       select.innerHTML = '<option value="">請選擇品項</option>';
       flavorList.forEach(f => {
         let opt = document.createElement('option');
-        opt.value = f;
-        opt.innerText = f;
+        opt.value = f; opt.innerText = f;
         select.appendChild(opt);
       });
       
@@ -167,92 +340,55 @@
       questions.forEach((q, qIdx) => {
         let optionsHtml = q.options.map((optLabel, oIdx) => {
           const score = 5 - oIdx;
-          return `
-            <label class="opt-item">
-              <input type="radio" name="q${qIdx}" value="${score}" required>
-              <span class="opt-text">${escapeHtml(optLabel)}</span>
-            </label>`;
+          return `<label class="opt-item"><input type="radio" name="q${qIdx}" value="${score}" required><span class="opt-text">${escapeHtml(optLabel)}</span></label>`;
         }).join('');
         
-        qContainer.innerHTML += `
-          <div class="q-box">
-            <span class="q-title">${qIdx + 1}. ${escapeHtml(q.title)}</span>
-            <div class="options-list">${optionsHtml}</div>
-          </div>`;
+        qContainer.innerHTML += `<div class="q-box"><span class="q-title">${qIdx + 1}. ${escapeHtml(q.title)}</span><div>${optionsHtml}</div></div>`;
       });
       
-      // 綁定提交事件
-      document.getElementById('quiz').onsubmit = submitFeedback;
-    }
-    
-    // 提交問卷
-    async function submitFeedback(e) {
-      e.preventDefault();
-      
-      const select = document.getElementById('flavorSelect');
-      if (!select.value) {
-        alert('請選擇試吃品項');
-        return;
-      }
-      
-      const btn = document.getElementById('subBtn');
-      const originalText = btn.innerText;
-      btn.disabled = true;
-      btn.innerText = "提交中...";
-      
-      // 收集分數
-      const questions = document.querySelectorAll('.q-box');
-      const scores = Array.from(questions).map((_, idx) => {
-        const checked = document.querySelector(`input[name="q${idx}"]:checked`);
-        return checked ? checked.value : "0";
-      });
-      
-      const feedbackData = {
-        action: 'saveFeedback',
-        userId: userId || 'guest_' + Date.now(),
-        actName: document.getElementById('actTitle').innerText,
-        flavor: select.value,
-        scores: scores,
-        comment: document.getElementById('comment').value
-      };
-      
-      try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 15000);
-        
-        const response = await fetch(GAS_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(feedbackData),
-          signal: controller.signal
-        });
-        clearTimeout(timeoutId);
-        
-        const result = await response.json();
-        
-        if (result.success) {
-          document.body.innerHTML = `
-            <div style="text-align:center;padding:100px 20px;background:#fef7e8;min-height:100vh;">
-              <img src="https://i.postimg.cc/SNhTdvv9/yi-dian-tian-288x.png" style="width:100px;margin-bottom:20px;">
-              <h2 style="color:#c26e3c;">🎉 提交成功！</h2>
-              <p>優惠券已發送到您的 LINE 視窗。<br>請回對話視窗領取！</p>
-              <button onclick="if(window.liff) liff.closeWindow(); else window.close();" 
-                style="margin-top:30px;padding:12px 24px;background:#c26e3c;color:white;border:none;border-radius:8px;">
-                關閉視窗
-              </button>
-            </div>`;
-        } else {
-          throw new Error(result.message || '提交失敗');
+      document.getElementById('quiz').onsubmit = async function(e) {
+        e.preventDefault();
+        if (!select.value) {
+          alert('請選擇試吃品項');
+          return;
         }
-      } catch (error) {
-        console.error('提交失敗:', error);
-        btn.disabled = false;
-        btn.innerText = originalText;
         
-        let errorMsg = error.message;
-        if (error.name === 'AbortError') errorMsg = '連線超時，請檢查網路後重試';
-        alert('提交失敗：' + errorMsg);
-      }
+        const btn = document.getElementById('subBtn');
+        btn.disabled = true;
+        btn.innerText = "傳送中...";
+        
+        const scores = questions.map((_, idx) => {
+          const checked = document.querySelector(`input[name="q${idx}"]:checked`);
+          return checked ? checked.value : "0";
+        });
+        
+        try {
+          const response = await fetch(GAS_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              action: 'saveFeedback',
+              userId: userId,
+              actName: actName,
+              flavor: select.value,
+              scores: scores,
+              comment: document.getElementById('comment').value
+            })
+          });
+          
+          const result = await response.json();
+          
+          if (result.success) {
+            document.body.innerHTML = `<div style="text-align:center;padding:100px 20px;background:#fef7e8;min-height:100vh;"><img src="https://i.postimg.cc/SNhTdvv9/yi-dian-tian-288x.png" style="width:100px;"><br><h2 style="color:#c26e3c;">🎉 提交成功！</h2><p>優惠券已發送到您的 LINE 視窗。<br>請回對話視窗領取！</p><button onclick="if(window.liff) liff.closeWindow(); else window.close();" style="margin-top:20px;padding:10px 20px;background:#c26e3c;color:white;border:none;border-radius:8px;">關閉視窗</button></div>`;
+          } else {
+            throw new Error(result.message);
+          }
+        } catch(error) {
+          btn.disabled = false;
+          btn.innerText = "提交問卷 領優惠券";
+          alert('提交失敗：' + error.message);
+        }
+      };
     }
     
     function escapeHtml(text) {
@@ -261,21 +397,7 @@
       return div.innerHTML;
     }
     
-    // 啟動 - 並行執行
-    async function start() {
-      // 並行載入 LIFF 和問卷資料
-      const [_, questionnaireData] = await Promise.allSettled([
-        loadLiffSDK(),
-        loadQuestionnaire()
-      ]);
-      
-      // 背景獲取用戶 ID
-      getUserId().then(id => {
-        if (id) userId = id;
-      });
-    }
-    
-    start();
+    initialize();
   </script>
 </body>
 </html>
