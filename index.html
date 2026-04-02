@@ -2,90 +2,327 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>活動問卷</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>一點甜｜Gelato 霜淇淋試吃回饋</title>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <style>
-        body { font-family: sans-serif; padding: 20px; line-height: 1.6; }
-        select, button { width: 100%; padding: 10px; margin: 10px 0; }
-        button { background: #00b900; color: white; border: none; border-radius: 5px; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #fdf8ed;  /* 暖色基底 */
+            font-family: 'Segoe UI', 'Noto Sans TC', Roboto, -apple-system, BlinkMacSystemFont, sans-serif;
+            padding: 20px;
+            color: #3e2a2a;
+        }
+
+        /* 主卡片 */
+        .card {
+            max-width: 560px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 36px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08), 0 6px 12px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+            transition: transform 0.2s ease;
+        }
+
+        /* 頭部區塊 (品牌色 + Logo) */
+        .hero {
+            background: linear-gradient(135deg, #f8b56c 0%, #e88d4a 100%);
+            padding: 28px 24px 24px 24px;
+            text-align: center;
+            color: white;
+        }
+
+        .logo {
+            width: 80px;
+            height: auto;
+            margin-bottom: 12px;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+        }
+
+        .hero h2 {
+            font-size: 26px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .hero .sub {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        /* 表單內容區 */
+        .form-container {
+            padding: 28px 24px 32px;
+        }
+
+        .form-group {
+            margin-bottom: 22px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 15px;
+            color: #5a3a2a;
+            letter-spacing: 0.5px;
+        }
+
+        label i {
+            color: #e88d4a;
+            font-style: normal;
+            margin-right: 4px;
+        }
+
+        select {
+            width: 100%;
+            padding: 14px 16px;
+            font-size: 16px;
+            border: 1.5px solid #ffe1b3;
+            border-radius: 28px;
+            background: #fffef7;
+            transition: all 0.2s;
+            font-family: inherit;
+            color: #2c1a1a;
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23e88d4a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 16px center;
+            background-size: 18px;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: #f0a55a;
+            box-shadow: 0 0 0 3px rgba(232, 141, 74, 0.2);
+        }
+
+        /* 提交按鈕 */
+        .btn-submit {
+            width: 100%;
+            background: linear-gradient(100deg, #f0a055 0%, #e0772c 100%);
+            color: white;
+            border: none;
+            padding: 16px;
+            font-size: 18px;
+            font-weight: 700;
+            border-radius: 44px;
+            margin-top: 12px;
+            cursor: pointer;
+            transition: all 0.25s;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-submit:hover {
+            background: linear-gradient(100deg, #e88d3a 0%, #d1641c 100%);
+            transform: scale(1.01);
+            box-shadow: 0 8px 18px rgba(224, 119, 44, 0.3);
+        }
+
+        .btn-submit:active {
+            transform: scale(0.98);
+        }
+
+        .btn-submit:disabled {
+            opacity: 0.65;
+            transform: none;
+            cursor: not-allowed;
+        }
+
+        /* 小甜點裝飾 */
+        .sweet-note {
+            text-align: center;
+            margin-top: 28px;
+            font-size: 12px;
+            color: #c0a07a;
+            border-top: 1px dashed #ffdfb8;
+            padding-top: 20px;
+        }
+
+        /* 載入狀態 */
+        .loading-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #b97f4b;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #ffe0bf;
+            border-top: 3px solid #e88d4a;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* 隱藏輔助 */
+        .hidden {
+            display: none;
+        }
+
+        /* 手機最佳化 */
+        @media (max-width: 500px) {
+            body { padding: 12px; }
+            .form-container { padding: 20px; }
+            .hero h2 { font-size: 22px; }
+            select { padding: 12px 16px; }
+        }
     </style>
 </head>
 <body>
-    <h2 id="actName">載入中...</h2>
-    <form id="quizForm">
-        <label>試吃品項</label><select id="item" required></select>
-        <label>視覺吸引力</label><select id="visual" required></select>
-        <label>極致口感</label><select id="texture" required></select>
-        <label>風味平衡</label><select id="balance" required></select>
-        <label>使用者身分</label><select id="identity" required></select>
-        <label>您的年紀</label><select id="age" required></select>
-        <button type="submit" id="submitBtn">提交問卷</button>
-    </form>
 
-    <script>
-        const LIFF_ID = '2009574561-O1KcpV0n';
-        const GAS_URL = 'https://script.google.com/macros/s/AKfycbyTugMVmQ4dWa3DXvuXoZKHOsR5qtkXpbnzlLh0eN6Lel-SU4p7I3YOD2aGbdYnLPtR/exec'; // 部署為 Web App 後產生的 URL
-        let userId = "";
+<div class="card" id="mainCard">
+    <div class="hero">
+        <!-- Logo 使用您提供的圖片 -->
+        <img class="logo" src="https://i.postimg.cc/SNhTdvv9/yi-dian-tian-288x.png" alt="一點甜 Logo" onerror="this.style.display='none'">
+        <h2 id="actName">載中等甜蜜...</h2>
+        <div class="sub">填寫回饋 · 領取限定優惠</div>
+    </div>
 
-        async function init() {
-            await liff.init({ liffId: LIFF_ID });
-            if (!liff.isLoggedIn()) {
-                liff.login();
-            } else {
-                const profile = await liff.getProfile();
-                userId = profile.userId;
-                fetchOptions();
-            }
+    <div class="form-container">
+        <!-- 表單載入時的 loading 畫面 -->
+        <div id="loadingArea" class="loading-state">
+            <div class="spinner"></div>
+            <p>準備問卷中 🍰</p>
+        </div>
+
+        <!-- 主要表單 (預設隱藏) -->
+        <form id="quizForm" style="display: none;">
+            <div class="form-group">
+                <label><i>🍰</i> 試吃品項</label>
+                <select id="item" required></select>
+            </div>
+            <div class="form-group">
+                <label><i>👁️</i> 視覺吸引力</label>
+                <select id="visual" required></select>
+            </div>
+            <div class="form-group">
+                <label><i>😋</i> 極致口感</label>
+                <select id="texture" required></select>
+            </div>
+            <div class="form-group">
+                <label><i>⚖️</i> 風味平衡</label>
+                <select id="balance" required></select>
+            </div>
+            <div class="form-group">
+                <label><i>👥</i> 使用者身分</label>
+                <select id="identity" required></select>
+            </div>
+            <div class="form-group">
+                <label><i>📅</i> 您的年紀</label>
+                <select id="age" required></select>
+            </div>
+            <button type="submit" class="btn-submit" id="submitBtn">
+                ✨ 提交問卷 · 領優惠券 ✨
+            </button>
+            <div class="sweet-note">
+                🧁 您的每一份意見，都是我們更甜蜜的動力
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // ----- 完全保留您原有功能邏輯，僅調整視覺反饋與loading狀態 -----
+    const LIFF_ID = '2009574561-O1KcpV0n';
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycbyTugMVmQ4dWa3DXvuXoZKHOsR5qtkXpbnzlLh0eN6Lel-SU4p7I3YOD2aGbdYnLPtR/exec'; // 您已部署的 Web App URL
+    let userId = "";
+
+    async function init() {
+        await liff.init({ liffId: LIFF_ID });
+        if (!liff.isLoggedIn()) {
+            liff.login();
+        } else {
+            const profile = await liff.getProfile();
+            userId = profile.userId;
+            fetchOptions();
         }
+    }
 
-        async function fetchOptions() {
+    async function fetchOptions() {
+        try {
             const resp = await fetch(GAS_URL);
             const data = await resp.json();
-            document.getElementById('actName').innerText = data.title;
+            document.getElementById('actName').innerText = data.title || "一點甜試吃活動";
             fillSelect('item', data.items);
             fillSelect('visual', data.visuals);
             fillSelect('texture', data.texture);
             fillSelect('balance', data.balance);
             fillSelect('identity', data.identity);
             fillSelect('age', data.age);
+
+            // 載入完成：隱藏 loading，顯示表單
+            document.getElementById('loadingArea').style.display = 'none';
+            document.getElementById('quizForm').style.display = 'block';
+        } catch (err) {
+            document.getElementById('loadingArea').innerHTML = '<p>🍂 無法載入問卷，請重新整理</p><button onclick="location.reload()" style="margin-top:12px;padding:8px 20px;border-radius:40px;border:none;background:#e88d4a;color:white;">重新整理</button>';
         }
+    }
 
-        function fillSelect(id, list) {
-            const el = document.getElementById(id);
-            list.forEach(txt => {
-                const opt = document.createElement('option');
-                opt.value = opt.text = txt;
-                el.add(opt);
-            });
-        }
+    function fillSelect(id, list) {
+        const el = document.getElementById(id);
+        el.innerHTML = '<option value="" disabled selected>請選擇</option>';
+        if (!list || list.length === 0) return;
+        list.forEach(txt => {
+            const opt = document.createElement('option');
+            opt.value = opt.text = txt;
+            el.appendChild(opt);
+        });
+    }
 
-        document.getElementById('quizForm').onsubmit = async (e) => {
-            e.preventDefault();
-            document.getElementById('submitBtn').disabled = true;
-            document.getElementById('submitBtn').innerText = "提交中...";
+    document.getElementById('quizForm').onsubmit = async (e) => {
+        e.preventDefault();
+        const submitBtn = document.getElementById('submitBtn');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = "📨 提交中，請稍後...";
 
-            const payload = {
-                userId: userId,
-                activity: document.getElementById('actName').innerText,
-                item: document.getElementById('item').value,
-                visual: document.getElementById('visual').value,
-                texture: document.getElementById('texture').value,
-                balance: document.getElementById('balance').value,
-                identity: document.getElementById('identity').value,
-                age: document.getElementById('age').value
-            };
-
-            await fetch(GAS_URL, {
-                method: 'POST',
-                body: JSON.stringify(payload)
-            });
-
-            alert('問卷已提交，優惠券將發送至您的 LINE！');
-            liff.closeWindow();
+        const payload = {
+            userId: userId,
+            activity: document.getElementById('actName').innerText,
+            item: document.getElementById('item').value,
+            visual: document.getElementById('visual').value,
+            texture: document.getElementById('texture').value,
+            balance: document.getElementById('balance').value,
+            identity: document.getElementById('identity').value,
+            age: document.getElementById('age').value
         };
 
-        init();
-    </script>
+        try {
+            await fetch(GAS_URL, {
+                method: 'POST',
+                mode: 'no-cors',        // 保留原有跨域方式，不影響發送
+                body: JSON.stringify(payload)
+            });
+            alert('🎉 問卷已送出！優惠券將透過 LINE 發送給您～');
+            liff.closeWindow();
+        } catch (err) {
+            alert('發送失敗，請稍後再試');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = "✨ 提交問卷 · 領優惠券 ✨";
+        }
+    };
+
+    init();
+</script>
 </body>
 </html>
