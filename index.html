@@ -10,14 +10,12 @@
             padding: 0;
             box-sizing: border-box;
         }
-
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             padding: 20px;
         }
-
         .container {
             max-width: 600px;
             margin: 0 auto;
@@ -25,45 +23,27 @@
             border-radius: 24px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
             overflow: hidden;
-            animation: slideUp 0.5s ease;
         }
-
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
         .header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             padding: 30px 20px;
             text-align: center;
         }
-
         .header h1 {
             font-size: 28px;
             margin-bottom: 8px;
         }
-
         .header p {
             opacity: 0.9;
             font-size: 14px;
         }
-
         .content {
             padding: 24px;
         }
-
         .form-group {
             margin-bottom: 24px;
         }
-
         label {
             display: block;
             font-weight: 600;
@@ -71,89 +51,24 @@
             color: #333;
             font-size: 14px;
         }
-
         .required::after {
             content: ' *';
             color: #e74c3c;
         }
-
         select, input, textarea {
             width: 100%;
             padding: 12px 16px;
             border: 2px solid #e0e0e0;
             border-radius: 12px;
             font-size: 16px;
-            transition: all 0.3s;
             font-family: inherit;
+            background: white;
+            cursor: pointer;
         }
-
-        select:focus, input:focus, textarea:focus {
+        select:focus, input:focus {
             outline: none;
             border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
-
-        .rating-group {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-            margin-top: 8px;
-        }
-
-        .rating-option {
-            flex: 1;
-            min-width: 50px;
-            text-align: center;
-        }
-
-        .rating-option input {
-            display: none;
-        }
-
-        .rating-option label {
-            display: block;
-            padding: 10px;
-            background: #f5f5f5;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: all 0.3s;
-            margin: 0;
-            font-weight: normal;
-            text-align: center;
-        }
-
-        .rating-option input:checked + label {
-            background: #667eea;
-            color: white;
-        }
-
-        .radio-group {
-            display: flex;
-            gap: 20px;
-            flex-wrap: wrap;
-            margin-top: 8px;
-        }
-
-        .radio-option {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .radio-option input {
-            width: auto;
-        }
-
-        .radio-option label {
-            margin: 0;
-            font-weight: normal;
-        }
-
-        textarea {
-            resize: vertical;
-            min-height: 100px;
-        }
-
         button {
             width: 100%;
             padding: 16px;
@@ -164,29 +79,20 @@
             font-size: 18px;
             font-weight: 600;
             cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: transform 0.2s;
         }
-
         button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
         }
-
-        button:active {
-            transform: translateY(0);
-        }
-
         button:disabled {
             opacity: 0.6;
             cursor: not-allowed;
+            transform: none;
         }
-
         .loading {
-            display: none;
             text-align: center;
-            padding: 20px;
+            padding: 40px;
         }
-
         .spinner {
             width: 40px;
             height: 40px;
@@ -196,31 +102,26 @@
             animation: spin 1s linear infinite;
             margin: 0 auto;
         }
-
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-
         .message {
             padding: 12px;
             border-radius: 12px;
             margin-bottom: 20px;
             display: none;
         }
-
         .message.success {
             background: #d4edda;
             color: #155724;
             border: 1px solid #c3e6cb;
         }
-
         .message.error {
             background: #f8d7da;
             color: #721c24;
             border: 1px solid #f5c6cb;
         }
-
         .user-info {
             background: #f8f9fa;
             padding: 12px;
@@ -229,11 +130,14 @@
             font-size: 14px;
             color: #666;
         }
-
-        .rating-section {
-            border-top: 1px solid #e0e0e0;
-            padding-top: 16px;
-            margin-top: 16px;
+        .activity-name {
+            background: linear-gradient(135deg, #667eea20 0%, #764ba220 100%);
+            padding: 12px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: bold;
+            color: #667eea;
         }
     </style>
     <script src="https://static.line-sdk.net/liff/edge/2/sdk.js"></script>
@@ -246,44 +150,54 @@
         </div>
         <div class="content">
             <div id="message" class="message"></div>
-            <div id="userInfo" class="user-info"></div>
+            <div id="userInfo" class="user-info">載入中...</div>
             <div id="loading" class="loading">
                 <div class="spinner"></div>
-                <p style="margin-top: 10px;">載入中...</p>
+                <p style="margin-top: 10px;">載入問卷中...</p>
             </div>
-            <form id="surveyForm">
+            <form id="surveyForm" style="display: none;">
+                <div id="activityName" class="activity-name"></div>
+                
                 <div class="form-group">
-                    <label class="required">選擇品項</label>
-                    <select id="itemSelect" required>
-                        <option value="">請選擇試吃品項</option>
+                    <label class="required">試吃品項</label>
+                    <select id="item" required>
+                        <option value="">請選擇</option>
                     </select>
                 </div>
 
                 <div class="form-group">
-                    <label class="required">試吃日期</label>
-                    <input type="date" id="date" required>
+                    <label class="required">視覺吸引力</label>
+                    <select id="visual" required>
+                        <option value="">請選擇</option>
+                    </select>
                 </div>
 
-                <div id="ratingsContainer"></div>
+                <div class="form-group">
+                    <label class="required">極致口感</label>
+                    <select id="taste" required>
+                        <option value="">請選擇</option>
+                    </select>
+                </div>
 
                 <div class="form-group">
-                    <label>建議與回饋</label>
-                    <textarea id="suggestion" placeholder="請分享您的想法..."></textarea>
+                    <label class="required">風味平衡</label>
+                    <select id="balance" required>
+                        <option value="">請選擇</option>
+                    </select>
                 </div>
 
                 <div class="form-group">
                     <label class="required">使用者身分</label>
-                    <div class="radio-group" id="userTypeGroup"></div>
+                    <select id="userType" required>
+                        <option value="">請選擇</option>
+                    </select>
                 </div>
 
                 <div class="form-group">
-                    <label class="required">性別</label>
-                    <div class="radio-group" id="genderGroup"></div>
-                </div>
-
-                <div class="form-group">
-                    <label class="required">年齡</label>
-                    <div class="radio-group" id="ageGroup"></div>
+                    <label class="required">您的年紀</label>
+                    <select id="age" required>
+                        <option value="">請選擇</option>
+                    </select>
                 </div>
 
                 <button type="button" id="submitBtn">提交問卷 🎁</button>
@@ -292,15 +206,17 @@
     </div>
 
     <script>
-        const liffId = '2009574561-O1KcpV0n';
+        const LIFF_ID = '2009574561-O1KcpV0n';
+        // 請替換為您的GAS部署網址
+        const API_URL = 'https://script.google.com/macros/s/AKfycbyTugMVmQ4dWa3DXvuXoZKHOsR5qtkXpbnzlLh0eN6Lel-SU4p7I3YOD2aGbdYnLPtR/exec';
+        
         let userId = null;
         let questionData = null;
-        let selectedQuestion = null;
-        const apiUrl = 'https://script.google.com/macros/s/AKfycbyTugMVmQ4dWa3DXvuXoZKHOsR5qtkXpbnzlLh0eN6Lel-SU4p7I3YOD2aGbdYnLPtR/exec'; // 請替換為您的GAS部署網址
 
-        async function initializeLiff() {
+        // 初始化LIFF
+        async function initLIFF() {
             try {
-                await liff.init({ liffId: liffId });
+                await liff.init({ liffId: LIFF_ID });
                 
                 if (!liff.isLoggedIn()) {
                     liff.login();
@@ -309,191 +225,149 @@
                 
                 const profile = await liff.getProfile();
                 userId = profile.userId;
-                document.getElementById('userInfo').innerHTML = `👤 用戶ID: ${userId.substring(0, 8)}...`;
+                document.getElementById('userInfo').innerHTML = `👤 已登入 - ID: ${userId.substring(0, 10)}...`;
                 
-                await loadQuestionData();
+                await loadQuestions();
                 
             } catch (error) {
                 console.error('LIFF初始化失敗:', error);
-                showMessage('初始化失敗，請重新開啟頁面', 'error');
+                document.getElementById('userInfo').innerHTML = '❌ 初始化失敗，請在LINE中開啟';
+                showMessage('請在LINE中開啟此問卷', 'error');
             }
         }
 
-        async function loadQuestionData() {
-            showLoading(true);
+        // 載入問卷選項
+        async function loadQuestions() {
             try {
-                const response = await fetch(apiUrl);
-                const data = await response.json();
-                if (!data.success) throw new Error(data.error);
+                const response = await fetch(API_URL);
+                const result = await response.json();
                 
-                questionData = data;
+                if (!result.success) {
+                    throw new Error(result.error);
+                }
                 
-                // 填入品項下拉選單
-                const itemSelect = document.getElementById('itemSelect');
-                itemSelect.innerHTML = '<option value="">請選擇試吃品項</option>';
-                data.items.forEach(item => {
+                questionData = result.data;
+                
+                // 顯示活動名稱
+                document.getElementById('activityName').innerHTML = `🏷️ ${questionData.activityName}`;
+                
+                // 填入試吃品項下拉選單
+                const itemSelect = document.getElementById('item');
+                questionData.items.forEach(item => {
                     const option = document.createElement('option');
                     option.value = item;
                     option.textContent = item;
                     itemSelect.appendChild(option);
                 });
                 
-                // 監聽品項選擇變化
-                itemSelect.addEventListener('change', function() {
-                    if (this.value) {
-                        selectedQuestion = data.questions.find(q => q.item === this.value);
-                        if (selectedQuestion) {
-                            renderForm(selectedQuestion);
-                        }
-                    } else {
-                        document.getElementById('ratingsContainer').innerHTML = '';
-                    }
+                // 填入視覺吸引力選項
+                const visualSelect = document.getElementById('visual');
+                questionData.visualOptions.forEach(opt => {
+                    const option = document.createElement('option');
+                    option.value = opt;
+                    option.textContent = opt;
+                    visualSelect.appendChild(option);
                 });
                 
-                showLoading(false);
-            } catch (error) {
-                console.error('載入問卷失敗:', error);
-                showMessage('載入問卷內容失敗，請稍後再試', 'error');
-                showLoading(false);
-            }
-        }
-
-        function renderForm(question) {
-            if (!question) return;
-            
-            // 渲染評分項目
-            const ratingsContainer = document.getElementById('ratingsContainer');
-            ratingsContainer.innerHTML = '';
-            
-            question.ratings.forEach((rating, index) => {
-                const ratingDiv = document.createElement('div');
-                ratingDiv.className = 'form-group';
-                ratingDiv.innerHTML = `
-                    <label class="required">${rating.name}</label>
-                    <div class="rating-group" id="rating_${index}"></div>
-                `;
-                ratingsContainer.appendChild(ratingDiv);
+                // 填入極致口感選項
+                const tasteSelect = document.getElementById('taste');
+                questionData.tasteOptions.forEach(opt => {
+                    const option = document.createElement('option');
+                    option.value = opt;
+                    option.textContent = opt;
+                    tasteSelect.appendChild(option);
+                });
                 
-                // 渲染評分按鈕
-                const ratingGroup = ratingDiv.querySelector(`#rating_${index}`);
-                for (let i = 1; i <= rating.maxScore; i++) {
-                    const optionDiv = document.createElement('div');
-                    optionDiv.className = 'rating-option';
-                    optionDiv.innerHTML = `
-                        <input type="radio" name="rating_${index}" value="${i}" id="rating_${index}_${i}">
-                        <label for="rating_${index}_${i}">${i}</label>
-                    `;
-                    ratingGroup.appendChild(optionDiv);
-                }
-            });
-            
-            // 渲染使用者身分選項
-            if (question.userType) {
-                renderRadioGroup('userTypeGroup', question.userType.split(','), 'userType');
-            }
-            
-            // 渲染性別選項
-            if (question.gender) {
-                renderRadioGroup('genderGroup', question.gender.split(','), 'gender');
-            }
-            
-            // 渲染年齡選項
-            if (question.age) {
-                const ageOptions = question.age.split(',');
-                renderRadioGroup('ageGroup', ageOptions, 'age');
+                // 填入風味平衡選項
+                const balanceSelect = document.getElementById('balance');
+                questionData.balanceOptions.forEach(opt => {
+                    const option = document.createElement('option');
+                    option.value = opt;
+                    option.textContent = opt;
+                    balanceSelect.appendChild(option);
+                });
+                
+                // 填入使用者身分選項
+                const userTypeSelect = document.getElementById('userType');
+                questionData.userTypeOptions.forEach(opt => {
+                    const option = document.createElement('option');
+                    option.value = opt;
+                    option.textContent = opt;
+                    userTypeSelect.appendChild(option);
+                });
+                
+                // 填入年紀選項
+                const ageSelect = document.getElementById('age');
+                questionData.ageOptions.forEach(opt => {
+                    const option = document.createElement('option');
+                    option.value = opt;
+                    option.textContent = opt;
+                    ageSelect.appendChild(option);
+                });
+                
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('surveyForm').style.display = 'block';
+                
+            } catch (error) {
+                console.error('載入失敗:', error);
+                document.getElementById('loading').innerHTML = '<p style="color:red;">載入問卷失敗，請重新整理</p>';
+                showMessage('載入問卷失敗: ' + error.message, 'error');
             }
         }
 
-        function renderRadioGroup(containerId, options, name) {
-            const container = document.getElementById(containerId);
-            if (!container) return;
-            container.innerHTML = '';
-            options.forEach(option => {
-                if (option && option.trim()) {
-                    const div = document.createElement('div');
-                    div.className = 'radio-option';
-                    div.innerHTML = `
-                        <input type="radio" name="${name}" value="${option.trim()}" id="${name}_${option.trim()}">
-                        <label for="${name}_${option.trim()}">${option.trim()}</label>
-                    `;
-                    container.appendChild(div);
-                }
-            });
-        }
-
-        function getAllRatings() {
-            if (!selectedQuestion) return [];
-            const scores = [];
-            for (let i = 0; i < selectedQuestion.ratings.length; i++) {
-                const selected = document.querySelector(`input[name="rating_${i}"]:checked`);
-                scores.push(selected ? parseInt(selected.value) : null);
-            }
-            return scores;
-        }
-
+        // 驗證表單
         function validateForm() {
-            if (!document.getElementById('itemSelect').value) {
+            if (!document.getElementById('item').value) {
                 showMessage('請選擇試吃品項', 'error');
                 return false;
             }
-            
-            if (!document.getElementById('date').value) {
-                showMessage('請選擇試吃日期', 'error');
+            if (!document.getElementById('visual').value) {
+                showMessage('請選擇視覺吸引力評分', 'error');
                 return false;
             }
-            
-            const scores = getAllRatings();
-            for (let i = 0; i < scores.length; i++) {
-                if (scores[i] === null) {
-                    showMessage(`請完成所有評分項目`, 'error');
-                    return false;
-                }
+            if (!document.getElementById('taste').value) {
+                showMessage('請選擇極致口感評分', 'error');
+                return false;
             }
-            
-            if (!document.querySelector('input[name="userType"]:checked')) {
+            if (!document.getElementById('balance').value) {
+                showMessage('請選擇風味平衡評分', 'error');
+                return false;
+            }
+            if (!document.getElementById('userType').value) {
                 showMessage('請選擇使用者身分', 'error');
                 return false;
             }
-            
-            if (!document.querySelector('input[name="gender"]:checked')) {
-                showMessage('請選擇性別', 'error');
+            if (!document.getElementById('age').value) {
+                showMessage('請選擇您的年紀', 'error');
                 return false;
             }
-            
-            if (!document.querySelector('input[name="age"]:checked')) {
-                showMessage('請選擇年齡', 'error');
-                return false;
-            }
-            
             return true;
         }
 
+        // 提交表單
         async function submitForm() {
             if (!validateForm()) return;
             
-            const scores = getAllRatings();
             const formData = {
                 userId: userId,
-                item: document.getElementById('itemSelect').value,
-                date: document.getElementById('date').value,
-                scores: scores,
-                suggestion: document.getElementById('suggestion').value,
-                userType: document.querySelector('input[name="userType"]:checked').value,
-                gender: document.querySelector('input[name="gender"]:checked').value,
-                age: document.querySelector('input[name="age"]:checked').value
+                activityName: questionData.activityName,
+                item: document.getElementById('item').value,
+                visual: document.getElementById('visual').value,
+                taste: document.getElementById('taste').value,
+                balance: document.getElementById('balance').value,
+                userType: document.getElementById('userType').value,
+                age: document.getElementById('age').value
             };
             
-            const submitBtn = document.getElementById('submitBtn');
-            submitBtn.disabled = true;
-            submitBtn.textContent = '提交中...';
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.textContent = '提交中...';
             
             try {
-                const response = await fetch(apiUrl, {
+                const response = await fetch(API_URL, {
                     method: 'POST',
                     mode: 'cors',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(formData)
                 });
                 
@@ -502,17 +376,19 @@
                 if (result.success) {
                     showMessage('提交成功！優惠券已發送至您的LINE聊天室 🎉', 'success');
                     setTimeout(() => {
-                        liff.closeWindow();
+                        if (liff.isInClient()) {
+                            liff.closeWindow();
+                        } else {
+                            window.location.reload();
+                        }
                     }, 3000);
                 } else {
                     throw new Error(result.error);
                 }
-                
             } catch (error) {
-                console.error('提交失敗:', error);
-                showMessage('提交失敗，請稍後再試: ' + error.message, 'error');
-                submitBtn.disabled = false;
-                submitBtn.textContent = '提交問卷 🎁';
+                showMessage('提交失敗：' + error.message, 'error');
+                btn.disabled = false;
+                btn.textContent = '提交問卷 🎁';
             }
         }
 
@@ -526,22 +402,11 @@
             }, 5000);
         }
 
-        function showLoading(show) {
-            const loadingDiv = document.getElementById('loading');
-            const form = document.getElementById('surveyForm');
-            loadingDiv.style.display = show ? 'block' : 'none';
-            form.style.display = show ? 'none' : 'block';
-        }
-
-        // 綁定提交事件
+        // 綁定事件
         document.getElementById('submitBtn').addEventListener('click', submitForm);
         
-        // 設定預設日期為今天
-        const today = new Date().toISOString().split('T')[0];
-        document.getElementById('date').value = today;
-        
-        // 初始化
-        initializeLiff();
+        // 啟動
+        initLIFF();
     </script>
 </body>
 </html>
