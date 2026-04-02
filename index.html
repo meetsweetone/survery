@@ -6,156 +6,123 @@
   <style>
     body { background: #fef7e8; font-family: sans-serif; padding: 15px; color: #444; line-height: 1.5; }
     .container { max-width: 500px; margin: 0 auto; background: white; border-radius: 25px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; }
-    .logo { width: 120px; height: auto; margin-bottom: 10px; }
-    h1 { color: #c26e3c; font-size: 1.2rem; margin-bottom: 20px; margin-top: 5px; }
-    form { text-align: left; }
+    .logo { width: 120px; margin-bottom: 10px; }
+    h1 { color: #c26e3c; font-size: 1.3rem; }
+    form { text-align: left; margin-top: 20px; }
     .q-box { background: #fffaf2; padding: 18px; border-radius: 15px; margin-bottom: 20px; border: 1px solid #f9ebda; }
-    .q-title { font-weight: bold; display: block; color: #5a3e2b; margin-bottom: 15px; font-size: 1rem; border-left: 4px solid #c26e3c; padding-left: 10px; }
-    .opt-item { display: flex; align-items: flex-start; margin-bottom: 12px; cursor: pointer; padding: 8px; border-radius: 8px; transition: 0.2s; }
-    .opt-item:hover { background: #fdf2e4; }
-    input[type="radio"] { margin-right: 12px; margin-top: 4px; transform: scale(1.3); }
-    .opt-text { font-size: 0.95rem; color: #666; }
-    select, textarea { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #ddd; margin-top: 5px; box-sizing: border-box; font-size: 1rem; }
+    .q-title { font-weight: bold; color: #5a3e2b; margin-bottom: 15px; border-left: 4px solid #c26e3c; padding-left: 10px; }
+    .opt-item { display: flex; align-items: flex-start; margin-bottom: 12px; }
+    input[type=radio] { margin-right: 12px; transform: scale(1.3); }
+    select, textarea { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #ddd; box-sizing: border-box; }
     button { width: 100%; padding: 16px; background: #c26e3c; color: white; border: none; border-radius: 30px; margin-top: 25px; font-weight: bold; font-size: 1.1rem; cursor: pointer; }
-    button:disabled { background: #ccc; }
-    label { font-weight: bold; color: #5a3e2b; display: block; margin-bottom: 5px; margin-top: 15px; }
-    #loading { padding: 50px 0; }
   </style>
 </head>
-<body>
 
+<body>
   <div class="container" id="loading">
     <img src="https://i.postimg.cc/SNhTdvv9/yi-dian-tian-288x.png" class="logo">
-    <p>正在為生活加入一點甜...</p>
-    <small id="errorMsg" style="color:red; display:none;"><br>連線較慢，請稍候或重新開啟</small>
+    <p>正在載入問卷...</p>
   </div>
 
   <div class="container" id="main" style="display:none">
     <img src="https://i.postimg.cc/SNhTdvv9/yi-dian-tian-288x.png" class="logo">
-    <h1 id="actTitle">一點甜品評問卷</h1>
+    <h1 id="actTitle"></h1>
     <form id="quiz">
       <label>🍦 請選擇試吃品項</label>
       <select id="flavorSelect" required></select>
-      
-      <div id="dynamicQuestions" style="margin-top:25px"></div>
-
+      <div id="dynamicQuestions"></div>
       <label>✍️ 您的具體建議</label>
-      <textarea id="comment" rows="3" placeholder="例如：甜度、份量、口感..."></textarea>
-      
-      <button type="submit" id="subBtn">提交問卷 領優惠券</button>
+      <textarea id="comment" rows="3"></textarea>
+      <button type="submit">提交問卷 領優惠券</button>
     </form>
   </div>
 
-  <script src="https://static.line-scdn.net/liff/edge/2.1/sdk.js"></script>
   <script>
     const GAS_URL = "https://script.google.com/macros/s/AKfycbyQVWYgnKGP-W5ddxOoLprz_f3s2rxn7HwtoeQ7KxpJ4cL_42n16Q_IP7jsoJZBa9qD/exec";
-    const LIFF_ID = "2009574561-O1KcpV0n";
+    const LIFF_ID = "2009574561-O1KcpV0n"; // 已補上
     let userId = "guest";
-    let questionsData = [];
+    let actName = "";
+    let questions = [];
 
-    // 1. 初始化 LIFF
-    async function init() {
+    // LIFF 初始化
+    async function initLiff() {
       try {
+        const script = document.createElement('script');
+        script.src = 'https://static.line-scdn.net/liff/edge/2.1/sdk.js';
+        await new Promise(resolve => script.onload = resolve);
         await liff.init({ liffId: LIFF_ID });
-        if (!liff.isLoggedIn()) {
+        if (liff.isLoggedIn()) {
+          const profile = await liff.getProfile();
+          userId = profile.userId;
+        } else {
           liff.login();
-          return;
         }
-        const profile = await liff.getProfile();
-        userId = profile.userId;
-        loadSurvey(); // 登入成功後載入問卷
-      } catch (e) {
-        console.error("LIFF Error", e);
-        loadSurvey(); // 失敗也嘗試載入（訪客模式）
+      } catch (err) {
+        console.log("LIFF 略過");
       }
     }
 
-    // 2. 載入問卷
+    // 載入問卷
     async function loadSurvey() {
-      try {
-        // 加上 action=getQuestionnaire 與時間戳
-        const res = await fetch(`${GAS_URL}?action=getQuestionnaire&t=${Date.now()}`);
-        const data = await res.json();
-        
-        if (!data.success) throw new Error("GAS回傳失敗");
+      const res = await fetch(GAS_URL + "?action=getSurvey");
+      const data = await res.json();
 
-        document.getElementById('actTitle').innerText = data.actName;
-        questionsData = data.questions;
+      actName = data.actName;
+      questions = data.questions;
+      document.getElementById("actTitle").innerText = actName;
 
-        // 品項選單
-        const f = document.getElementById('flavorSelect');
-        f.innerHTML = '<option value="">請選擇品項</option>';
-        data.flavorList.forEach(x => {
-          const o = document.createElement('option');
-          o.value = x; o.innerText = x;
-          f.appendChild(o);
-        });
+      data.flavorList.forEach(f => {
+        const opt = document.createElement("option");
+        opt.value = f;
+        opt.innerText = f;
+        document.getElementById("flavorSelect").appendChild(opt);
+      });
 
-        // 動態題目
-        const qc = document.getElementById('dynamicQuestions');
-        questionsData.forEach((q, i) => {
-          const opts = q.options.map((opt, j) => {
-            const score = 5 - j;
-            return `<label class="opt-item"><input type="radio" name="q${i}" value="${score}" required><span class="opt-text">${opt}</span></label>`;
-          }).join('');
-          qc.innerHTML += `<div class="q-box"><span class="q-title">${i+1}. ${q.title}</span>${opts}</div>`;
-        });
+      questions.forEach((q, idx) => {
+        const opts = q.options.map((opt, j) => {
+          const score = 5 - j;
+          return `<label class="opt-item"><input type="radio" name="q${idx}" value="${score}" required><span>${opt}</span></label>`;
+        }).join('');
+        document.getElementById("dynamicQuestions").innerHTML += `
+          <div class="q-box">
+            <div class="q-title">${idx+1}. ${q.title}</div>${opts}
+          </div>`;
+      });
 
-        document.getElementById('loading').style.display = 'none';
-        document.getElementById('main').style.display = 'block';
-      } catch (e) {
-        console.error("Load Error", e);
-        document.getElementById('errorMsg').style.display = 'block';
-      }
+      document.getElementById("loading").style.display = "none";
+      document.getElementById("main").style.display = "block";
     }
 
-    // 3. 提交問卷
-    document.getElementById('quiz').onsubmit = async (e) => {
+    // 提交
+    document.getElementById("quiz").onsubmit = async (e) => {
       e.preventDefault();
-      const btn = document.getElementById('subBtn');
-      btn.disabled = true; 
-      btn.innerText = "傳送中，請勿關閉...";
+      const btn = e.submitter;
+      btn.disabled = true;
+      btn.innerText = "送出中...";
 
-      const scores = questionsData.map((_, i) => {
-        const c = document.querySelector(`input[name="q${i}"]:checked`);
+      const scores = questions.map((_, i) => {
+        const c = document.querySelector(`input[name=q${i}]:checked`);
         return c ? c.value : "0";
       });
 
-      const payload = {
-        action: 'saveFeedback',
-        userId: userId,
-        actName: document.getElementById('actTitle').innerText,
-        flavor: document.getElementById('flavorSelect').value,
-        scores: scores,
-        comment: document.getElementById('comment').value
-      };
+      await fetch(GAS_URL, {
+        method: "POST",
+        body: JSON.stringify({
+          userId, actName,
+          flavor: document.getElementById("flavorSelect").value,
+          scores,
+          comment: document.getElementById("comment").value
+        })
+      });
 
-      try {
-        // 使用 no-cors 解決 302 重導向問題
-        await fetch(GAS_URL, {
-          method: 'POST',
-          mode: 'no-cors',
-          headers: { 'Content-Type': 'text/plain' },
-          body: JSON.stringify(payload)
-        });
-
-        // 顯示成功
-        document.body.innerHTML = `
-          <div style='text-align:center;padding:100px 20px;background:#fef7e8;min-height:100vh'>
-            <img src='https://i.postimg.cc/SNhTdvv9/yi-dian-tian-288x.png' style='width:100px'>
-            <br><h2 style='color:#c26e3c'>🎉 提交成功！</h2>
-            <p>感謝您的回饋，<br>優惠券已發送到您的 LINE 視窗。</p>
-            <button onclick="liff.closeWindow()" style="margin-top:20px; padding:10px 20px; background:#c26e3c; color:#fff; border:none; border-radius:10px;">關閉問卷</button>
-          </div>`;
-      } catch (error) {
-        alert("提交異常，請檢查網路連線");
-        btn.disabled = false;
-        btn.innerText = "提交問卷 領優惠券";
-      }
+      document.body.innerHTML = `<div style='text-align:center;padding:100px;background:#fef7e8'><img src='https://i.postimg.cc/SNhTdvv9/yi-dian-tian-288x.png' style='width:100px'><br><h2>🎉 提交成功！</h2><p>優惠券已發送</p></div>`;
     };
 
     // 啟動
-    init();
+    (async () => {
+      await initLiff();
+      await loadSurvey();
+    })();
   </script>
 </body>
 </html>
