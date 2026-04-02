@@ -77,7 +77,7 @@
             color: #e74c3c;
         }
 
-        input, select, textarea {
+        select, input, textarea {
             width: 100%;
             padding: 12px 16px;
             border: 2px solid #e0e0e0;
@@ -87,7 +87,7 @@
             font-family: inherit;
         }
 
-        input:focus, select:focus, textarea:focus {
+        select:focus, input:focus, textarea:focus {
             outline: none;
             border-color: #667eea;
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
@@ -130,6 +130,7 @@
         .radio-group {
             display: flex;
             gap: 20px;
+            flex-wrap: wrap;
             margin-top: 8px;
         }
 
@@ -228,8 +229,14 @@
             font-size: 14px;
             color: #666;
         }
+
+        .rating-section {
+            border-top: 1px solid #e0e0e0;
+            padding-top: 16px;
+            margin-top: 16px;
+        }
     </style>
-    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <script src="https://static.line-sdk.net/liff/edge/2/sdk.js"></script>
 </head>
 <body>
     <div class="container">
@@ -246,8 +253,10 @@
             </div>
             <form id="surveyForm">
                 <div class="form-group">
-                    <label class="required">試吃品項</label>
-                    <input type="text" id="item" readonly style="background:#f5f5f5">
+                    <label class="required">選擇品項</label>
+                    <select id="itemSelect" required>
+                        <option value="">請選擇試吃品項</option>
+                    </select>
                 </div>
 
                 <div class="form-group">
@@ -255,25 +264,7 @@
                     <input type="date" id="date" required>
                 </div>
 
-                <div class="form-group">
-                    <label class="required" id="rating1Label">評分項(一)</label>
-                    <div class="rating-group" id="rating1Group"></div>
-                </div>
-
-                <div class="form-group">
-                    <label class="required" id="rating2Label">評分項(二)</label>
-                    <div class="rating-group" id="rating2Group"></div>
-                </div>
-
-                <div class="form-group">
-                    <label class="required" id="rating3Label">評分項(三)</label>
-                    <div class="rating-group" id="rating3Group"></div>
-                </div>
-
-                <div class="form-group">
-                    <label id="rating4Label">評分項(四)</label>
-                    <div class="rating-group" id="rating4Group"></div>
-                </div>
+                <div id="ratingsContainer"></div>
 
                 <div class="form-group">
                     <label>建議與回饋</label>
@@ -295,16 +286,17 @@
                     <div class="radio-group" id="ageGroup"></div>
                 </div>
 
-                <button type="submit" id="submitBtn">提交問卷 🎁</button>
+                <button type="button" id="submitBtn">提交問卷 🎁</button>
             </form>
         </div>
     </div>
 
     <script>
-        let liffId = '2009574561-O1KcpV0n';
+        const liffId = '2009574561-O1KcpV0n';
         let userId = null;
         let questionData = null;
-        let apiUrl = 'https://script.google.com/macros/s/AKfycbyTugMVmQ4dWa3DXvuXoZKHOsR5qtkXpbnzlLh0eN6Lel-SU4p7I3YOD2aGbdYnLPtR/exec'; // 請替換為您的GAS部署網址
+        let selectedQuestion = null;
+        const apiUrl = 'https://script.google.com/macros/YOUR_DEPLOYMENT_ID/exec'; // 請替換為您的GAS部署網址
 
         async function initializeLiff() {
             try {
@@ -320,7 +312,6 @@
                 document.getElementById('userInfo').innerHTML = `👤 用戶ID: ${userId.substring(0, 8)}...`;
                 
                 await loadQuestionData();
-                renderForm();
                 
             } catch (error) {
                 console.error('LIFF初始化失敗:', error);
@@ -329,139 +320,167 @@
         }
 
         async function loadQuestionData() {
+            showLoading(true);
             try {
                 const response = await fetch(apiUrl);
                 const data = await response.json();
-                if (data.error) throw new Error(data.error);
+                if (!data.success) throw new Error(data.error);
+                
                 questionData = data;
+                
+                // 填入品項下拉選單
+                const itemSelect = document.getElementById('itemSelect');
+                itemSelect.innerHTML = '<option value="">請選擇試吃品項</option>';
+                data.items.forEach(item => {
+                    const option = document.createElement('option');
+                    option.value = item;
+                    option.textContent = item;
+                    itemSelect.appendChild(option);
+                });
+                
+                // 監聽品項選擇變化
+                itemSelect.addEventListener('change', function() {
+                    if (this.value) {
+                        selectedQuestion = data.questions.find(q => q.item === this.value);
+                        if (selectedQuestion) {
+                            renderForm(selectedQuestion);
+                        }
+                    } else {
+                        document.getElementById('ratingsContainer').innerHTML = '';
+                    }
+                });
+                
+                showLoading(false);
             } catch (error) {
                 console.error('載入問卷失敗:', error);
                 showMessage('載入問卷內容失敗，請稍後再試', 'error');
+                showLoading(false);
             }
         }
 
-        function renderForm() {
-            if (!questionData) return;
+        function renderForm(question) {
+            if (!question) return;
             
-            document.getElementById('item').value = questionData.item || '';
+            // 渲染評分項目
+            const ratingsContainer = document.getElementById('ratingsContainer');
+            ratingsContainer.innerHTML = '';
             
-            // 設定評分項
-            renderRatingGroup('rating1Group', questionData.rating1.name, questionData.rating1.score);
-            renderRatingGroup('rating2Group', questionData.rating2.name, questionData.rating2.score);
-            renderRatingGroup('rating3Group', questionData.rating3.name, questionData.rating3.score);
-            renderRatingGroup('rating4Group', questionData.rating4.name, questionData.rating4.score);
-            
-            document.getElementById('rating1Label').innerHTML = questionData.rating1.name + ' <span style="color:#e74c3c">*</span>';
-            document.getElementById('rating2Label').innerHTML = questionData.rating2.name + ' <span style="color:#e74c3c">*</span>';
-            document.getElementById('rating3Label').innerHTML = questionData.rating3.name + ' <span style="color:#e74c3c">*</span>';
-            if (questionData.rating4.name) {
-                document.getElementById('rating4Label').innerHTML = questionData.rating4.name;
-            }
-            
-            // 設定選項
-            renderRadioGroup('userTypeGroup', questionData.userType.split(','), 'userType');
-            renderRadioGroup('genderGroup', questionData.gender.split(','), 'gender');
-            
-            const ageOptions = [];
-            if (questionData.ageMin && questionData.ageMax) {
-                for (let i = questionData.ageMin; i <= questionData.ageMax; i+=10) {
-                    ageOptions.push(`${i}-${i+9}歲`);
-                }
-            }
-            renderRadioGroup('ageGroup', ageOptions, 'age');
-        }
-
-        function renderRatingGroup(containerId, label, maxScore) {
-            const container = document.getElementById(containerId);
-            container.innerHTML = '';
-            for (let i = 1; i <= maxScore; i++) {
-                const div = document.createElement('div');
-                div.className = 'rating-option';
-                div.innerHTML = `
-                    <input type="radio" name="${containerId}" value="${i}" id="${containerId}_${i}">
-                    <label for="${containerId}_${i}">${i}</label>
+            question.ratings.forEach((rating, index) => {
+                const ratingDiv = document.createElement('div');
+                ratingDiv.className = 'form-group';
+                ratingDiv.innerHTML = `
+                    <label class="required">${rating.name}</label>
+                    <div class="rating-group" id="rating_${index}"></div>
                 `;
-                container.appendChild(div);
+                ratingsContainer.appendChild(ratingDiv);
+                
+                // 渲染評分按鈕
+                const ratingGroup = ratingDiv.querySelector(`#rating_${index}`);
+                for (let i = 1; i <= rating.maxScore; i++) {
+                    const optionDiv = document.createElement('div');
+                    optionDiv.className = 'rating-option';
+                    optionDiv.innerHTML = `
+                        <input type="radio" name="rating_${index}" value="${i}" id="rating_${index}_${i}">
+                        <label for="rating_${index}_${i}">${i}</label>
+                    `;
+                    ratingGroup.appendChild(optionDiv);
+                }
+            });
+            
+            // 渲染使用者身分選項
+            if (question.userType) {
+                renderRadioGroup('userTypeGroup', question.userType.split(','), 'userType');
+            }
+            
+            // 渲染性別選項
+            if (question.gender) {
+                renderRadioGroup('genderGroup', question.gender.split(','), 'gender');
+            }
+            
+            // 渲染年齡選項
+            if (question.age) {
+                const ageOptions = question.age.split(',');
+                renderRadioGroup('ageGroup', ageOptions, 'age');
             }
         }
 
         function renderRadioGroup(containerId, options, name) {
             const container = document.getElementById(containerId);
+            if (!container) return;
             container.innerHTML = '';
             options.forEach(option => {
-                const div = document.createElement('div');
-                div.className = 'radio-option';
-                div.innerHTML = `
-                    <input type="radio" name="${name}" value="${option}" id="${name}_${option}">
-                    <label for="${name}_${option}">${option}</label>
-                `;
-                container.appendChild(div);
+                if (option && option.trim()) {
+                    const div = document.createElement('div');
+                    div.className = 'radio-option';
+                    div.innerHTML = `
+                        <input type="radio" name="${name}" value="${option.trim()}" id="${name}_${option.trim()}">
+                        <label for="${name}_${option.trim()}">${option.trim()}</label>
+                    `;
+                    container.appendChild(div);
+                }
             });
         }
 
-        function getSelectedRating(containerId) {
-            const selected = document.querySelector(`input[name="${containerId}"]:checked`);
-            return selected ? parseInt(selected.value) : null;
-        }
-
-        function getSelectedRadio(name) {
-            const selected = document.querySelector(`input[name="${name}"]:checked`);
-            return selected ? selected.value : null;
+        function getAllRatings() {
+            if (!selectedQuestion) return [];
+            const scores = [];
+            for (let i = 0; i < selectedQuestion.ratings.length; i++) {
+                const selected = document.querySelector(`input[name="rating_${i}"]:checked`);
+                scores.push(selected ? parseInt(selected.value) : null);
+            }
+            return scores;
         }
 
         function validateForm() {
-            if (!getSelectedRating('rating1Group')) {
-                showMessage('請完成所有評分項目', 'error');
+            if (!document.getElementById('itemSelect').value) {
+                showMessage('請選擇試吃品項', 'error');
                 return false;
             }
-            if (!getSelectedRating('rating2Group')) {
-                showMessage('請完成所有評分項目', 'error');
-                return false;
-            }
-            if (!getSelectedRating('rating3Group')) {
-                showMessage('請完成所有評分項目', 'error');
-                return false;
-            }
+            
             if (!document.getElementById('date').value) {
                 showMessage('請選擇試吃日期', 'error');
                 return false;
             }
-            if (!getSelectedRadio('userType')) {
+            
+            const scores = getAllRatings();
+            for (let i = 0; i < scores.length; i++) {
+                if (scores[i] === null) {
+                    showMessage(`請完成所有評分項目`, 'error');
+                    return false;
+                }
+            }
+            
+            if (!document.querySelector('input[name="userType"]:checked')) {
                 showMessage('請選擇使用者身分', 'error');
                 return false;
             }
-            if (!getSelectedRadio('gender')) {
+            
+            if (!document.querySelector('input[name="gender"]:checked')) {
                 showMessage('請選擇性別', 'error');
                 return false;
             }
-            if (!getSelectedRadio('age')) {
+            
+            if (!document.querySelector('input[name="age"]:checked')) {
                 showMessage('請選擇年齡', 'error');
                 return false;
             }
+            
             return true;
         }
 
-        async function submitForm(event) {
-            event.preventDefault();
-            
+        async function submitForm() {
             if (!validateForm()) return;
             
-            const scores = [
-                getSelectedRating('rating1Group'),
-                getSelectedRating('rating2Group'),
-                getSelectedRating('rating3Group'),
-                getSelectedRating('rating4Group')
-            ];
-            
+            const scores = getAllRatings();
             const formData = {
                 userId: userId,
-                item: document.getElementById('item').value,
+                item: document.getElementById('itemSelect').value,
                 date: document.getElementById('date').value,
                 scores: scores,
                 suggestion: document.getElementById('suggestion').value,
-                userType: getSelectedRadio('userType'),
-                gender: getSelectedRadio('gender'),
-                age: getSelectedRadio('age')
+                userType: document.querySelector('input[name="userType"]:checked').value,
+                gender: document.querySelector('input[name="gender"]:checked').value,
+                age: document.querySelector('input[name="age"]:checked').value
             };
             
             const submitBtn = document.getElementById('submitBtn');
@@ -471,21 +490,27 @@
             try {
                 const response = await fetch(apiUrl, {
                     method: 'POST',
-                    mode: 'no-cors',
+                    mode: 'cors',
                     headers: {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify(formData)
                 });
                 
-                showMessage('提交成功！優惠券已發送至您的LINE聊天室 🎉', 'success');
-                setTimeout(() => {
-                    liff.closeWindow();
-                }, 3000);
+                const result = await response.json();
+                
+                if (result.success) {
+                    showMessage('提交成功！優惠券已發送至您的LINE聊天室 🎉', 'success');
+                    setTimeout(() => {
+                        liff.closeWindow();
+                    }, 3000);
+                } else {
+                    throw new Error(result.error);
+                }
                 
             } catch (error) {
                 console.error('提交失敗:', error);
-                showMessage('提交失敗，請稍後再試', 'error');
+                showMessage('提交失敗，請稍後再試: ' + error.message, 'error');
                 submitBtn.disabled = false;
                 submitBtn.textContent = '提交問卷 🎁';
             }
@@ -501,12 +526,21 @@
             }, 5000);
         }
 
-        document.getElementById('surveyForm').addEventListener('submit', submitForm);
+        function showLoading(show) {
+            const loadingDiv = document.getElementById('loading');
+            const form = document.getElementById('surveyForm');
+            loadingDiv.style.display = show ? 'block' : 'none';
+            form.style.display = show ? 'none' : 'block';
+        }
+
+        // 綁定提交事件
+        document.getElementById('submitBtn').addEventListener('click', submitForm);
         
         // 設定預設日期為今天
         const today = new Date().toISOString().split('T')[0];
         document.getElementById('date').value = today;
         
+        // 初始化
         initializeLiff();
     </script>
 </body>
