@@ -1,520 +1,91 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>試吃問卷調查</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>活動問卷</title>
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 24px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            overflow: hidden;
-        }
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 30px 20px;
-            text-align: center;
-        }
-        .header h1 {
-            font-size: 28px;
-            margin-bottom: 8px;
-        }
-        .header p {
-            opacity: 0.9;
-            font-size: 14px;
-        }
-        .content {
-            padding: 24px;
-        }
-        .form-group {
-            margin-bottom: 24px;
-        }
-        label {
-            display: block;
-            font-weight: 600;
-            margin-bottom: 8px;
-            color: #333;
-            font-size: 14px;
-        }
-        .required::after {
-            content: ' *';
-            color: #e74c3c;
-        }
-        select, input, textarea {
-            width: 100%;
-            padding: 12px 16px;
-            border: 2px solid #e0e0e0;
-            border-radius: 12px;
-            font-size: 16px;
-            font-family: inherit;
-            background: white;
-            cursor: pointer;
-        }
-        select:focus, input:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-        button {
-            width: 100%;
-            padding: 16px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 12px;
-            font-size: 18px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.2s;
-        }
-        button:hover {
-            transform: translateY(-2px);
-        }
-        button:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
-        .loading {
-            text-align: center;
-            padding: 40px;
-        }
-        .spinner {
-            width: 40px;
-            height: 40px;
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #667eea;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        .message {
-            padding: 12px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            display: none;
-        }
-        .message.success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-        .message.error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-        .user-info {
-            background: #f8f9fa;
-            padding: 12px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            font-size: 14px;
-            color: #666;
-        }
-        .activity-name {
-            background: linear-gradient(135deg, #667eea20 0%, #764ba220 100%);
-            padding: 12px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            text-align: center;
-            font-weight: bold;
-            color: #667eea;
-        }
-        .debug-info {
-            font-size: 12px;
-            color: #999;
-            margin-top: 20px;
-            padding: 10px;
-            background: #f5f5f5;
-            border-radius: 8px;
-            word-break: break-all;
-        }
+        body { font-family: sans-serif; padding: 20px; line-height: 1.6; }
+        select, button { width: 100%; padding: 10px; margin: 10px 0; }
+        button { background: #00b900; color: white; border: none; border-radius: 5px; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>📝 試吃問卷調查</h1>
-            <p>您的意見是我們進步的動力</p>
-        </div>
-        <div class="content">
-            <div id="message" class="message"></div>
-            <div id="userInfo" class="user-info">正在初始化...</div>
-            <div id="loading" class="loading">
-                <div class="spinner"></div>
-                <p style="margin-top: 10px;">載入中...</p>
-            </div>
-            <form id="surveyForm" style="display: none;">
-                <div id="activityName" class="activity-name"></div>
-                
-                <div class="form-group">
-                    <label class="required">試吃品項</label>
-                    <select id="item" required>
-                        <option value="">請選擇</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label class="required">視覺吸引力</label>
-                    <select id="visual" required>
-                        <option value="">請選擇</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label class="required">極致口感</label>
-                    <select id="taste" required>
-                        <option value="">請選擇</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label class="required">風味平衡</label>
-                    <select id="balance" required>
-                        <option value="">請選擇</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label class="required">使用者身分</label>
-                    <select id="userType" required>
-                        <option value="">請選擇</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label class="required">您的年紀</label>
-                    <select id="age" required>
-                        <option value="">請選擇</option>
-                    </select>
-                </div>
-
-                <button type="button" id="submitBtn">提交問卷 🎁</button>
-            </form>
-            <div id="debug" class="debug-info" style="display:none;"></div>
-        </div>
-    </div>
+    <h2 id="actName">載入中...</h2>
+    <form id="quizForm">
+        <label>試吃品項</label><select id="item" required></select>
+        <label>視覺吸引力</label><select id="visual" required></select>
+        <label>極致口感</label><select id="texture" required></select>
+        <label>風味平衡</label><select id="balance" required></select>
+        <label>使用者身分</label><select id="identity" required></select>
+        <label>您的年紀</label><select id="age" required></select>
+        <button type="submit" id="submitBtn">提交問卷</button>
+    </form>
 
     <script>
         const LIFF_ID = '2009574561-O1KcpV0n';
-        // 請替換為您的GAS部署網址
-        const API_URL = 'https://script.google.com/macros/s/AKfycbyTugMVmQ4dWa3DXvuXoZKHOsR5qtkXpbnzlLh0eN6Lel-SU4p7I3YOD2aGbdYnLPtR/exec';
-        
-        let userId = null;
-        let questionData = null;
-        let liffInitialized = false;
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbyTugMVmQ4dWa3DXvuXoZKHOsR5qtkXpbnzlLh0eN6Lel-SU4p7I3YOD2aGbdYnLPtR/exec'; // 部署為 Web App 後產生的 URL
+        let userId = "";
 
-        // 顯示除錯訊息
-        function debugLog(msg) {
-            console.log(msg);
-            const debugDiv = document.getElementById('debug');
-            if (debugDiv) {
-                debugDiv.innerHTML += new Date().toLocaleTimeString() + ': ' + msg + '<br>';
-                debugDiv.style.display = 'block';
+        async function init() {
+            await liff.init({ liffId: LIFF_ID });
+            if (!liff.isLoggedIn()) {
+                liff.login();
+            } else {
+                const profile = await liff.getProfile();
+                userId = profile.userId;
+                fetchOptions();
             }
         }
 
-        // 動態加載LIFF SDK
-        function loadLiffSDK() {
-            return new Promise((resolve, reject) => {
-                // 如果已經有liff物件，直接resolve
-                if (typeof liff !== 'undefined' && liff) {
-                    debugLog('LIFF SDK 已存在');
-                    resolve();
-                    return;
-                }
-                
-                // 嘗試多個CDN來源
-                const cdnUrls = [
-                    'https://static.line-sdk.net/liff/edge/2/sdk.js',
-                    'https://cdn.jsdelivr.net/npm/@line/liff@2.23.1/dist/liff.js',
-                    'https://unpkg.com/@line/liff@2.23.1/dist/liff.js'
-                ];
-                
-                let currentIndex = 0;
-                
-                function loadNext() {
-                    if (currentIndex >= cdnUrls.length) {
-                        reject(new Error('所有CDN都無法加載LIFF SDK'));
-                        return;
-                    }
-                    
-                    const url = cdnUrls[currentIndex];
-                    debugLog(`嘗試加載 LIFF SDK: ${url}`);
-                    
-                    const script = document.createElement('script');
-                    script.src = url;
-                    script.onload = () => {
-                        debugLog(`成功加載: ${url}`);
-                        resolve();
-                    };
-                    script.onerror = () => {
-                        debugLog(`加載失敗: ${url}`);
-                        currentIndex++;
-                        loadNext();
-                    };
-                    document.head.appendChild(script);
-                }
-                
-                loadNext();
+        async function fetchOptions() {
+            const resp = await fetch(GAS_URL);
+            const data = await resp.json();
+            document.getElementById('actName').innerText = data.title;
+            fillSelect('item', data.items);
+            fillSelect('visual', data.visuals);
+            fillSelect('texture', data.texture);
+            fillSelect('balance', data.balance);
+            fillSelect('identity', data.identity);
+            fillSelect('age', data.age);
+        }
+
+        function fillSelect(id, list) {
+            const el = document.getElementById(id);
+            list.forEach(txt => {
+                const opt = document.createElement('option');
+                opt.value = opt.text = txt;
+                el.add(opt);
             });
         }
 
-        // 初始化LIFF
-        async function initLIFF() {
-            try {
-                debugLog('開始初始化LIFF...');
-                
-                // 先加載SDK
-                await loadLiffSDK();
-                
-                // 等待liff物件可用
-                let retryCount = 0;
-                while (typeof liff === 'undefined' && retryCount < 10) {
-                    await new Promise(r => setTimeout(r, 100));
-                    retryCount++;
-                }
-                
-                if (typeof liff === 'undefined') {
-                    throw new Error('liff物件不存在');
-                }
-                
-                debugLog('LIFF SDK加載完成，開始初始化...');
-                await liff.init({ liffId: LIFF_ID });
-                debugLog('LIFF初始化成功');
-                
-                // 檢查登入狀態
-                if (!liff.isLoggedIn()) {
-                    debugLog('未登入，跳轉登入頁面');
-                    liff.login();
-                    return;
-                }
-                
-                // 獲取用戶資料
-                const profile = await liff.getProfile();
-                userId = profile.userId;
-                debugLog(`用戶ID: ${userId}`);
-                document.getElementById('userInfo').innerHTML = `✅ 已登入 - ID: ${userId.substring(0, 10)}...`;
-                
-                liffInitialized = true;
-                
-                // 載入問卷資料
-                await loadQuestions();
-                
-            } catch (error) {
-                debugLog(`LIFF初始化失敗: ${error.message}`);
-                console.error('LIFF初始化失敗:', error);
-                document.getElementById('userInfo').innerHTML = '⚠️ 初始化失敗，請重新開啟頁面';
-                showMessage('請確認網路連線後重新整理頁面', 'error');
-                
-                // 顯示重新整理按鈕
-                const loadingDiv = document.getElementById('loading');
-                loadingDiv.innerHTML = `
-                    <p style="color: red; margin-bottom: 20px;">初始化失敗: ${error.message}</p>
-                    <button onclick="location.reload()" style="background: #667eea; color: white; padding: 12px 24px; border: none; border-radius: 8px;">重新整理</button>
-                `;
-            }
-        }
+        document.getElementById('quizForm').onsubmit = async (e) => {
+            e.preventDefault();
+            document.getElementById('submitBtn').disabled = true;
+            document.getElementById('submitBtn').innerText = "提交中...";
 
-        // 載入問卷選項
-        async function loadQuestions() {
-            try {
-                debugLog('載入問卷資料...');
-                const response = await fetch(API_URL);
-                const result = await response.json();
-                
-                debugLog(`API回應: ${JSON.stringify(result).substring(0, 200)}`);
-                
-                if (!result.success) {
-                    throw new Error(result.error);
-                }
-                
-                questionData = result.data;
-                
-                // 顯示活動名稱
-                document.getElementById('activityName').innerHTML = `🏷️ ${questionData.activityName}`;
-                
-                // 填入試吃品項下拉選單
-                const itemSelect = document.getElementById('item');
-                questionData.items.forEach(item => {
-                    const option = document.createElement('option');
-                    option.value = item;
-                    option.textContent = item;
-                    itemSelect.appendChild(option);
-                });
-                
-                // 填入視覺吸引力選項
-                const visualSelect = document.getElementById('visual');
-                questionData.visualOptions.forEach(opt => {
-                    const option = document.createElement('option');
-                    option.value = opt;
-                    option.textContent = opt;
-                    visualSelect.appendChild(option);
-                });
-                
-                // 填入極致口感選項
-                const tasteSelect = document.getElementById('taste');
-                questionData.tasteOptions.forEach(opt => {
-                    const option = document.createElement('option');
-                    option.value = opt;
-                    option.textContent = opt;
-                    tasteSelect.appendChild(option);
-                });
-                
-                // 填入風味平衡選項
-                const balanceSelect = document.getElementById('balance');
-                questionData.balanceOptions.forEach(opt => {
-                    const option = document.createElement('option');
-                    option.value = opt;
-                    option.textContent = opt;
-                    balanceSelect.appendChild(option);
-                });
-                
-                // 填入使用者身分選項
-                const userTypeSelect = document.getElementById('userType');
-                questionData.userTypeOptions.forEach(opt => {
-                    const option = document.createElement('option');
-                    option.value = opt;
-                    option.textContent = opt;
-                    userTypeSelect.appendChild(option);
-                });
-                
-                // 填入年紀選項
-                const ageSelect = document.getElementById('age');
-                questionData.ageOptions.forEach(opt => {
-                    const option = document.createElement('option');
-                    option.value = opt;
-                    option.textContent = opt;
-                    ageSelect.appendChild(option);
-                });
-                
-                document.getElementById('loading').style.display = 'none';
-                document.getElementById('surveyForm').style.display = 'block';
-                debugLog('問卷載入完成');
-                
-            } catch (error) {
-                debugLog(`載入問卷失敗: ${error.message}`);
-                console.error('載入失敗:', error);
-                document.getElementById('loading').innerHTML = `<p style="color:red;">載入問卷失敗: ${error.message}<br>請確認GAS部署網址正確</p>`;
-                showMessage('載入問卷失敗: ' + error.message, 'error');
-            }
-        }
-
-        // 驗證表單
-        function validateForm() {
-            if (!document.getElementById('item').value) {
-                showMessage('請選擇試吃品項', 'error');
-                return false;
-            }
-            if (!document.getElementById('visual').value) {
-                showMessage('請選擇視覺吸引力評分', 'error');
-                return false;
-            }
-            if (!document.getElementById('taste').value) {
-                showMessage('請選擇極致口感評分', 'error');
-                return false;
-            }
-            if (!document.getElementById('balance').value) {
-                showMessage('請選擇風味平衡評分', 'error');
-                return false;
-            }
-            if (!document.getElementById('userType').value) {
-                showMessage('請選擇使用者身分', 'error');
-                return false;
-            }
-            if (!document.getElementById('age').value) {
-                showMessage('請選擇您的年紀', 'error');
-                return false;
-            }
-            return true;
-        }
-
-        // 提交表單
-        async function submitForm() {
-            if (!validateForm()) return;
-            
-            const formData = {
+            const payload = {
                 userId: userId,
-                activityName: questionData.activityName,
+                activity: document.getElementById('actName').innerText,
                 item: document.getElementById('item').value,
                 visual: document.getElementById('visual').value,
-                taste: document.getElementById('taste').value,
+                texture: document.getElementById('texture').value,
                 balance: document.getElementById('balance').value,
-                userType: document.getElementById('userType').value,
+                identity: document.getElementById('identity').value,
                 age: document.getElementById('age').value
             };
-            
-            debugLog(`提交資料: ${JSON.stringify(formData)}`);
-            
-            const btn = document.getElementById('submitBtn');
-            btn.disabled = true;
-            btn.textContent = '提交中...';
-            
-            try {
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    mode: 'cors',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(formData)
-                });
-                
-                const result = await response.json();
-                debugLog(`提交回應: ${JSON.stringify(result)}`);
-                
-                if (result.success) {
-                    showMessage('提交成功！優惠券已發送至您的LINE聊天室 🎉', 'success');
-                    setTimeout(() => {
-                        if (liffInitialized && liff.isInClient()) {
-                            liff.closeWindow();
-                        } else {
-                            window.location.reload();
-                        }
-                    }, 3000);
-                } else {
-                    throw new Error(result.error);
-                }
-            } catch (error) {
-                debugLog(`提交失敗: ${error.message}`);
-                showMessage('提交失敗：' + error.message, 'error');
-                btn.disabled = false;
-                btn.textContent = '提交問卷 🎁';
-            }
-        }
 
-        function showMessage(msg, type) {
-            const msgDiv = document.getElementById('message');
-            msgDiv.textContent = msg;
-            msgDiv.className = `message ${type}`;
-            msgDiv.style.display = 'block';
-            setTimeout(() => {
-                msgDiv.style.display = 'none';
-            }, 5000);
-        }
+            await fetch(GAS_URL, {
+                method: 'POST',
+                body: JSON.stringify(payload)
+            });
 
-        // 綁定事件
-        document.getElementById('submitBtn').addEventListener('click', submitForm);
-        
-        // 啟動
-        initLIFF();
+            alert('問卷已提交，優惠券將發送至您的 LINE！');
+            liff.closeWindow();
+        };
+
+        init();
     </script>
 </body>
 </html>
