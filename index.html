@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>一點甜｜Gelato 霜淇淋試吃回饋</title>
+    <title>一點甜｜Gelato 霜淇淋試吃 回饋</title>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <style>
         * {
@@ -13,7 +13,7 @@
         }
 
         body {
-            background: #fdf8ed;  /* 暖色基底 */
+            background: #fdf8ed;
             font-family: 'Segoe UI', 'Noto Sans TC', Roboto, -apple-system, BlinkMacSystemFont, sans-serif;
             padding: 20px;
             color: #3e2a2a;
@@ -27,22 +27,21 @@
             border-radius: 36px;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08), 0 6px 12px rgba(0, 0, 0, 0.05);
             overflow: hidden;
-            transition: transform 0.2s ease;
         }
 
-        /* 頭部區塊 (品牌色 + Logo) */
+        /* 頭部區塊 - 底色改為 #f4d1d7 */
         .hero {
-            background: linear-gradient(135deg, #f4d1d7 0%, #e88d4a 100%);
+            background: #f4d1d7;
             padding: 28px 24px 24px 24px;
             text-align: center;
-            color: white;
+            color: #5a3a3a;
         }
 
         .logo {
             width: 80px;
             height: auto;
             margin-bottom: 12px;
-            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.08));
         }
 
         .hero h2 {
@@ -50,12 +49,13 @@
             font-weight: 700;
             letter-spacing: 1px;
             margin-bottom: 6px;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            color: #4a2a2a;
         }
 
         .hero .sub {
             font-size: 14px;
-            opacity: 0.9;
+            opacity: 0.85;
+            color: #6a4a4a;
         }
 
         /* 表單內容區 */
@@ -82,28 +82,49 @@
             margin-right: 4px;
         }
 
+        /* 美觀下拉式選單 - 重新設計 */
+        .custom-select {
+            position: relative;
+            width: 100%;
+        }
+
         select {
             width: 100%;
-            padding: 14px 16px;
+            padding: 14px 18px;
             font-size: 16px;
-            border: 1.5px solid #ffe1b3;
-            border-radius: 28px;
-            background: #fffef7;
-            transition: all 0.2s;
+            border: 1.5px solid #e8d5c0;
+            border-radius: 16px;
+            background: #fffef8;
+            transition: all 0.25s ease;
             font-family: inherit;
-            color: #2c1a1a;
+            color: #3a2a2a;
             cursor: pointer;
             appearance: none;
-            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23e88d4a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d4a5a5' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
             background-repeat: no-repeat;
-            background-position: right 16px center;
+            background-position: right 18px center;
             background-size: 18px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+        }
+
+        select:hover {
+            border-color: #d4a5a5;
+            background: #ffffff;
         }
 
         select:focus {
             outline: none;
-            border-color: #f0a55a;
-            box-shadow: 0 0 0 3px rgba(232, 141, 74, 0.2);
+            border-color: #e0a0a0;
+            box-shadow: 0 0 0 4px rgba(244, 209, 215, 0.4);
+            background: #ffffff;
+        }
+
+        /* 選單內部選項樣式 */
+        select option {
+            padding: 12px;
+            background: white;
+            color: #3a2a2a;
+            font-size: 15px;
         }
 
         /* 提交按鈕 */
@@ -175,6 +196,89 @@
             100% { transform: rotate(360deg); }
         }
 
+        /* ===== 美化後的彈出卡片 (取代醜陋的 alert) ===== */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .success-card {
+            background: white;
+            max-width: 300px;
+            width: 85%;
+            border-radius: 32px;
+            text-align: center;
+            padding: 28px 20px 32px;
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+            box-shadow: 0 30px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-overlay.active .success-card {
+            transform: scale(1);
+        }
+
+        .success-icon {
+            width: 70px;
+            height: 70px;
+            background: #f4d1d7;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+            font-size: 38px;
+        }
+
+        .success-card h3 {
+            font-size: 22px;
+            color: #4a2a2a;
+            margin-bottom: 12px;
+            font-weight: 700;
+        }
+
+        .success-card p {
+            font-size: 15px;
+            color: #7a5a5a;
+            line-height: 1.5;
+            margin-bottom: 24px;
+        }
+
+        .close-modal-btn {
+            background: #f4d1d7;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 40px;
+            font-size: 16px;
+            font-weight: 600;
+            color: #4a2a2a;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 80%;
+        }
+
+        .close-modal-btn:hover {
+            background: #e8bfc7;
+            transform: scale(1.02);
+        }
+
         /* 隱藏輔助 */
         .hidden {
             display: none;
@@ -191,46 +295,65 @@
 </head>
 <body>
 
+<!-- 美化的彈出視窗 Modal -->
+<div id="successModal" class="modal-overlay">
+    <div class="success-card">
+        <div class="success-icon">🎉</div>
+        <h3>問卷已送出！</h3>
+        <p>優惠券將透過 LINE 發送給您<br>感謝您的寶貴意見 🍰</p>
+        <button class="close-modal-btn" onclick="closeModalAndCloseWindow()">好的 ✨</button>
+    </div>
+</div>
+
 <div class="card" id="mainCard">
     <div class="hero">
-        <!-- Logo 使用您提供的圖片 -->
         <img class="logo" src="https://i.postimg.cc/SNhTdvv9/yi-dian-tian-288x.png" alt="一點甜 Logo" onerror="this.style.display='none'">
         <h2 id="actName">遇見你，就是一點甜...</h2>
         <div class="sub">填寫回饋 · 領取限定優惠</div>
     </div>
 
     <div class="form-container">
-        <!-- 表單載入時的 loading 畫面 -->
         <div id="loadingArea" class="loading-state">
             <div class="spinner"></div>
-            <p>正在為你的生活，加入一點甜... 🍰</p>
+            <p>攪拌甜蜜中，請稍候片刻... 🍰</p>
         </div>
 
-        <!-- 主要表單 (預設隱藏) -->
         <form id="quizForm" style="display: none;">
             <div class="form-group">
                 <label><i>🍰</i> 試吃品項</label>
-                <select id="item" required></select>
+                <div class="custom-select">
+                    <select id="item" required></select>
+                </div>
             </div>
             <div class="form-group">
                 <label><i>👁️</i> 視覺吸引力</label>
-                <select id="visual" required></select>
+                <div class="custom-select">
+                    <select id="visual" required></select>
+                </div>
             </div>
             <div class="form-group">
                 <label><i>😋</i> 極致口感</label>
-                <select id="texture" required></select>
+                <div class="custom-select">
+                    <select id="texture" required></select>
+                </div>
             </div>
             <div class="form-group">
                 <label><i>⚖️</i> 風味平衡</label>
-                <select id="balance" required></select>
+                <div class="custom-select">
+                    <select id="balance" required></select>
+                </div>
             </div>
             <div class="form-group">
                 <label><i>👥</i> 使用者身分</label>
-                <select id="identity" required></select>
+                <div class="custom-select">
+                    <select id="identity" required></select>
+                </div>
             </div>
             <div class="form-group">
                 <label><i>📅</i> 您的年紀</label>
-                <select id="age" required></select>
+                <div class="custom-select">
+                    <select id="age" required></select>
+                </div>
             </div>
             <button type="submit" class="btn-submit" id="submitBtn">
                 ✨ 提交問卷 · 領優惠券 ✨
@@ -243,10 +366,26 @@
 </div>
 
 <script>
-    // ----- 完全保留您原有功能邏輯，僅調整視覺反饋與loading狀態 -----
+    // ----- 完整保留原有功能邏輯，僅將 alert 改為優雅 Modal + 刪除網址顯示 -----
     const LIFF_ID = '2009574561-O1KcpV0n';
-    const GAS_URL = 'https://script.google.com/macros/s/AKfycbyTugMVmQ4dWa3DXvuXoZKHOsR5qtkXpbnzlLh0eN6Lel-SU4p7I3YOD2aGbdYnLPtR/exec'; // 您已部署的 Web App URL
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycbyTugMVmQ4dWa3DXvuXoZKHOsR5qtkXpbnzlLh0eN6Lel-SU4p7I3YOD2aGbdYnLPtR/exec';
     let userId = "";
+
+    // Modal 控制函式
+    function showSuccessModal() {
+        const modal = document.getElementById('successModal');
+        modal.classList.add('active');
+    }
+
+    function closeModalAndCloseWindow() {
+        const modal = document.getElementById('successModal');
+        modal.classList.remove('active');
+        if (typeof liff !== 'undefined' && liff.isInClient && liff.isInClient()) {
+            liff.closeWindow();
+        } else {
+            window.close();
+        }
+    }
 
     async function init() {
         await liff.init({ liffId: LIFF_ID });
@@ -271,11 +410,10 @@
             fillSelect('identity', data.identity);
             fillSelect('age', data.age);
 
-            // 載入完成：隱藏 loading，顯示表單
             document.getElementById('loadingArea').style.display = 'none';
             document.getElementById('quizForm').style.display = 'block';
         } catch (err) {
-            document.getElementById('loadingArea').innerHTML = '<p>🍂 無法載入問卷，請重新整理</p><button onclick="location.reload()" style="margin-top:12px;padding:8px 20px;border-radius:40px;border:none;background:#e88d4a;color:white;">重新整理</button>';
+            document.getElementById('loadingArea').innerHTML = '<p>🍂 無法載入問卷，請重新整理</p><button onclick="location.reload()" style="margin-top:12px;padding:8px 20px;border-radius:40px;border:none;background:#f4d1d7;color:#4a2a2a;cursor:pointer;">重新整理</button>';
         }
     }
 
@@ -310,11 +448,13 @@
         try {
             await fetch(GAS_URL, {
                 method: 'POST',
-                mode: 'no-cors',        // 保留原有跨域方式，不影響發送
+                mode: 'no-cors',
                 body: JSON.stringify(payload)
             });
-            alert('🎉 問卷已送出！優惠券將透過 LINE 發送給您～');
-            liff.closeWindow();
+            
+            // 顯示美化後的卡片，取代 alert
+            showSuccessModal();
+            
         } catch (err) {
             alert('發送失敗，請稍後再試');
             submitBtn.disabled = false;
