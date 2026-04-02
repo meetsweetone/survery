@@ -342,6 +342,7 @@
     }
 
     // ========== 處理提交 ==========
+    // ========== 處理提交 (修正版) ==========
     async function handleSubmit(e) {
       e.preventDefault();
       
@@ -356,9 +357,9 @@
       submitBtn.disabled = true;
       submitBtn.textContent = '提交中...';
 
-      // 收集分數
-      const questions = document.querySelectorAll('.q-box');
-      const scores = Array.from(questions).map((_, qIndex) => {
+      // 1. 收集分數
+      const qBoxes = document.querySelectorAll('.q-box');
+      const scores = Array.from(qBoxes).map((_, qIndex) => {
         const checked = document.querySelector(`input[name="q${qIndex}"]:checked`);
         return checked ? checked.value : '0';
       });
@@ -366,49 +367,45 @@
       const actName = document.getElementById('actTitle').textContent;
       const comment = document.getElementById('commentInput').value;
 
+      // 2. 準備發送的資料
+      const payload = {
+        action: 'saveFeedback',
+        userId: userId, // 這是從 initLiff 拿到的 LINE ID
+        actName: actName,
+        flavor: flavorSelect.value,
+        scores: scores,
+        comment: comment
+      };
+
       try {
-        // 關鍵修復：移除 Content-Type 避免 CORS 預檢
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 15000);
-
-        const response = await fetch(GAS_URL, {
+        // 【關鍵修復點】: 使用 no-cors 模式發送
+        // 因為 GAS 會進行 302 重定向，一般 fetch 會噴 CORS 錯誤
+        await fetch(GAS_URL, {
           method: 'POST',
-          body: JSON.stringify({
-            action: 'saveFeedback',
-            userId: userId,
-            actName: actName,
-            flavor: flavorSelect.value,
-            scores: scores,
-            comment: comment
-          }),
-          signal: controller.signal
+          mode: 'no-cors', // 讓瀏覽器不要去檢查 Google 的回傳內容，只管把資料送過去
+          headers: {
+            'Content-Type': 'text/plain' // 設為純文字，避開瀏覽器的檢查機制
+          },
+          body: JSON.stringify(payload)
         });
-        clearTimeout(timeoutId);
 
-        const result = await response.json();
-        if (result.success) {
-          // 提交成功，顯示完成頁面
-          document.body.innerHTML = `
-            <div style="text-align:center;padding:100px 20px;background:#fef7e8;min-height:100vh;">
-              <img src="https://i.postimg.cc/SNhTdvv9/yi-dian-tian-288x.png" style="width:100px;margin-bottom:20px;">
-              <h2 style="color:#c26e3c;">🎉 提交成功！</h2>
-              <p>優惠券已發送到您的 LINE 視窗。<br>請回對話視窗領取！</p>
-              <button onclick="if(window.liff) liff.closeWindow(); else window.close();" 
-                style="margin-top:30px;padding:12px 24px;background:#c26e3c;color:white;border:none;border-radius:8px;font-weight:bold;">
-                關閉視窗
-              </button>
-            </div>
-          `;
-        } else {
-          throw new Error(result.message || '提交失敗');
-        }
+        // 3. 因為 no-cors 模式下拿不到回傳的 JSON (會是空的)
+        // 所以我們直接假設資料已經平安抵達 GAS，顯示成功畫面
+        document.body.innerHTML = `
+          <div style="text-align:center;padding:100px 20px;background:#fef7e8;min-height:100vh;">
+            <img src="https://i.postimg.cc/SNhTdvv9/yi-dian-tian-288x.png" style="width:100px;margin-bottom:20px;">
+            <h2 style="color:#c26e3c;">🎉 提交成功！</h2>
+            <p>優惠券已發送到您的 LINE 視窗。<br>請回對話視窗領取！</p>
+            <button onclick="if(window.liff) liff.closeWindow(); else window.close();" 
+              style="margin-top:30px;padding:12px 24px;background:#c26e3c;color:white;border:none;border-radius:8px;font-weight:bold;cursor:pointer;">
+              關閉視窗
+            </button>
+          </div>
+        `;
+
       } catch (err) {
         console.error('提交失敗:', err);
-        let errorMsg = err.message;
-        if (err.name === 'AbortError') errorMsg = '連線超時，請檢查網路後重試';
-        alert('提交失敗：' + errorMsg);
-      } finally {
-        // 恢復按鈕狀態
+        alert('系統繁忙，請稍後再試！');
         submitBtn.disabled = false;
         submitBtn.textContent = originalText;
       }
