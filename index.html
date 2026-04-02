@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>一點甜｜試吃回饋問卷</title>
+    <title>一點甜｜Gelato霜淇淋試吃回饋</title>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <style>
         * {
@@ -19,7 +19,6 @@
             color: #3e2a2a;
         }
 
-        /* 主卡片 */
         .card {
             max-width: 560px;
             margin: 0 auto;
@@ -29,36 +28,30 @@
             overflow: hidden;
         }
 
-        /* 頭部區塊 - 底色 #f4d1d7 */
         .hero {
             background: #f4d1d7;
             padding: 28px 24px 24px 24px;
             text-align: center;
-            color: #5a3a3a;
         }
 
         .logo {
             width: 80px;
             height: auto;
             margin-bottom: 12px;
-            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.08));
         }
 
         .hero h2 {
-            font-size: 26px;
+            font-size: 24px;
             font-weight: 700;
-            letter-spacing: 1px;
-            margin-bottom: 6px;
             color: #4a2a2a;
+            margin-bottom: 6px;
         }
 
         .hero .sub {
-            font-size: 14px;
-            opacity: 0.85;
+            font-size: 13px;
             color: #6a4a4a;
         }
 
-        /* 表單內容區 */
         .form-container {
             padding: 28px 24px 32px;
         }
@@ -73,16 +66,8 @@
             margin-bottom: 8px;
             font-size: 15px;
             color: #5a3a2a;
-            letter-spacing: 0.5px;
         }
 
-        label i {
-            color: #e88d4a;
-            font-style: normal;
-            margin-right: 4px;
-        }
-
-        /* ===== 質感下拉式選單 ===== */
         .custom-select {
             position: relative;
             width: 100%;
@@ -91,7 +76,7 @@
         select {
             width: 100%;
             padding: 14px 18px;
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 500;
             border: 2px solid #f0d5d5;
             border-radius: 20px;
@@ -105,10 +90,8 @@
             background-repeat: no-repeat;
             background-position: right 18px center;
             background-size: 20px;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
         }
 
-        /* 選單懸停與聚焦效果 */
         select:hover {
             border-color: #d4a5b0;
             background: #fffef8;
@@ -119,19 +102,8 @@
             outline: none;
             border-color: #e0a5b0;
             box-shadow: 0 0 0 4px rgba(244, 209, 215, 0.5);
-            background: #ffffff;
         }
 
-        /* 選單內部選項樣式 */
-        select option {
-            padding: 14px;
-            background: white;
-            color: #4a3a3a;
-            font-size: 15px;
-            font-weight: 500;
-        }
-
-        /* 提交按鈕 - 改為 #f4d1d7 */
         .btn-submit {
             width: 100%;
             background: #f4d1d7;
@@ -144,8 +116,6 @@
             margin-top: 12px;
             cursor: pointer;
             transition: all 0.25s;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
-            letter-spacing: 1px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -155,20 +125,13 @@
         .btn-submit:hover {
             background: #e8c0ca;
             transform: scale(1.01);
-            box-shadow: 0 8px 18px rgba(244, 209, 215, 0.5);
-        }
-
-        .btn-submit:active {
-            transform: scale(0.98);
         }
 
         .btn-submit:disabled {
             opacity: 0.65;
-            transform: none;
             cursor: not-allowed;
         }
 
-        /* 小甜點裝飾 */
         .sweet-note {
             text-align: center;
             margin-top: 28px;
@@ -178,11 +141,9 @@
             padding-top: 20px;
         }
 
-        /* 載入狀態 */
         .loading-state {
             text-align: center;
             padding: 40px 20px;
-            color: #b97f4b;
         }
 
         .spinner {
@@ -200,7 +161,7 @@
             100% { transform: rotate(360deg); }
         }
 
-        /* ===== 美化後的彈出卡片 ===== */
+        /* 美化彈出卡片 */
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -255,7 +216,6 @@
             font-size: 22px;
             color: #4a2a2a;
             margin-bottom: 12px;
-            font-weight: 700;
         }
 
         .success-card p {
@@ -274,86 +234,143 @@
             font-weight: 600;
             color: #4a2a2a;
             cursor: pointer;
-            transition: all 0.2s;
             width: 80%;
         }
 
         .close-modal-btn:hover {
             background: #e8bfc7;
-            transform: scale(1.02);
         }
 
-        /* 手機最佳化 */
         @media (max-width: 500px) {
             body { padding: 12px; }
             .form-container { padding: 20px; }
-            .hero h2 { font-size: 22px; }
             select { padding: 12px 16px; }
         }
     </style>
 </head>
 <body>
 
-<!-- 美化的彈出視窗 Modal -->
 <div id="successModal" class="modal-overlay">
     <div class="success-card">
-        <div class="success-icon">🎉</div>
+        <div class="success-icon">🍦</div>
         <h3>問卷已送出！</h3>
-        <p>優惠券將透過 LINE 發送給您<br>感謝您的寶貴意見 🍰</p>
+        <p>優惠券將透過 LINE 發送給您<br>感謝您的寶貴意見</p>
         <button class="close-modal-btn" onclick="closeModalAndCloseWindow()">好的 ✨</button>
     </div>
 </div>
 
-<div class="card" id="mainCard">
+<div class="card">
     <div class="hero">
-        <img class="logo" src="https://i.postimg.cc/SNhTdvv9/yi-dian-tian-288x.png" alt="一點甜 Logo" onerror="this.style.display='none'">
-        <h2 id="actName">遇見你，就是一點甜...</h2>
+        <img class="logo" src="https://i.postimg.cc/SNhTdvv9/yi-dian-tian-288x.png" alt="一點甜" onerror="this.style.display='none'">
+        <h2>🍦 一點甜 Gelato霜淇淋<br>試吃回饋</h2>
         <div class="sub">填寫回饋 · 領取限定優惠</div>
     </div>
 
     <div class="form-container">
-        <div id="loadingArea" class="loading-state">
+        <div id="loadingArea" class="loading-state" style="display:none;">
             <div class="spinner"></div>
-            <p>攪拌甜蜜中，請稍候片刻... 🍰</p>
+            <p>正在為你的生活，加入一點甜... 🍰</p>
         </div>
 
-        <form id="quizForm" style="display: none;">
-    <div class="form-group">
-        <label><i>🍰</i> 試吃品項</label>
-        <select id="item" required></select>
-    </div>
-    <div class="form-group">
-        <label><i>👁️</i> 視覺吸引力</label>
-        <select id="visual" required></select>
-    </div>
-    <div class="form-group">
-        <label><i>😋</i> 極致口感</label>
-        <select id="texture" required></select>
-    </div>
-    <div class="form-group">
-        <label><i>⚖️</i> 風味平衡</label>
-        <select id="balance" required></select>
-    </div>
-    <div class="form-group">
-        <label><i>👥</i> 您的性別</label>
-        <select id="identity" required></select>
-    </div>
-    <div class="form-group">
-        <label><i>📅</i> 您的年紀</label>
-        <select id="age" required></select>
-    </div>
-    <button type="submit" class="btn-submit" id="submitBtn">
-        ✨ 提交問卷 · 領優惠券 ✨
-    </button>
-    <div class="sweet-note">
-        🧁 您的每一份意見，都是我們更甜蜜的動力
-    </div>
-</form>
+        <form id="quizForm">
+            <div class="form-group">
+                <label>🍦 試吃品項</label>
+                <div class="custom-select">
+                    <select id="item" required>
+                        <option value="" disabled selected>請選擇</option>
+                        <option value="純粹香草 Gelato">🍦 純粹香草 Gelato</option>
+                        <option value="初戀草莓Gelato">🍓 初戀草莓Gelato</option>
+                        <option value="微苦抹綠Gelato">🍵 微苦抹綠Gelato</option>
+                        <option value="金黃南瓜Gelato">🎃 金黃南瓜Gelato</option>
+                        <option value="深焙拿鐵Gelato">☕ 深焙拿鐵Gelato</option>
+                        <option value="焙煎黑芝麻Gelato">🖤 焙煎黑芝麻Gelato</option>
+                        <option value="經典醇乳酪Gelato">🧀 經典醇乳酪Gelato</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>👁️ 視覺吸引力</label>
+                <div class="custom-select">
+                    <select id="visual" required>
+                        <option value="" disabled selected>請選擇</option>
+                        <option value="🤩 線條完美，想拍照紀錄">🤩 線條完美，想拍照紀錄</option>
+                        <option value="😊 精緻有質感，視覺加分">😊 精緻有質感，視覺加分</option>
+                        <option value="😐 外觀中規中矩">😐 外觀中規中矩</option>
+                        <option value="😟 外型略微塌陷">😟 外型略微塌陷</option>
+                        <option value="❌ 賣相不夠吸引人">❌ 賣相不夠吸引人</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>😋 極致口感</label>
+                <div class="custom-select">
+                    <select id="texture" required>
+                        <option value="" disabled selected>請選擇</option>
+                        <option value="🤩 細膩絲滑，像慕斯般柔軟">🤩 細膩絲滑，像慕斯般柔軟</option>
+                        <option value="😊 口感滑順，完全無冰晶">😊 口感滑順，完全無冰晶</option>
+                        <option value="😐 表現一般，化開速度稍快">😐 表現一般，化開速度稍快</option>
+                        <option value="😟 口感不均，帶有碎冰感">😟 口感不均，帶有碎冰感</option>
+                        <option value="❌ 質地偏水或過於黏膩">❌ 質地偏水或過於黏膩</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>⚖️ 風味平衡</label>
+                <div class="custom-select">
+                    <select id="balance" required>
+                        <option value="" disabled selected>請選擇</option>
+                        <option value="🤩 乳香醇厚，甜而不膩">🤩 乳香醇厚，甜而不膩</option>
+                        <option value="😊 香氣足夠，甜度適中">😊 香氣足夠，甜度適中</option>
+                        <option value="😐 味道還可以，甜度偏高">😐 味道還可以，甜度偏高</option>
+                        <option value="😟 風味平淡，奶香不突出">😟 風味平淡，奶香不突出</option>
+                        <option value="❌ 比例失衡，吃完想喝水">❌ 比例失衡，吃完想喝水</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>👤 您的性別</label>
+                <div class="custom-select">
+                    <select id="gender" required>
+                        <option value="" disabled selected>請選擇</option>
+                        <option value="我是帥哥">👦 我是帥哥</option>
+                        <option value="我是美人兒">👧 我是美人兒</option>
+                        <option value="我是達人">⭐ 我是達人</option>
+                        <option value="我是大廚">👨‍🍳 我是大廚</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>📅 您的年紀</label>
+                <div class="custom-select">
+                    <select id="age" required>
+                        <option value="" disabled selected>請選擇</option>
+                        <option value="12歲以下">🍼 12歲以下</option>
+                        <option value="13-18歲">📚 13-18歲</option>
+                        <option value="19-28歲">🎓 19-28歲</option>
+                        <option value="29-38歲">💼 29-38歲</option>
+                        <option value="39-48歲">🌟 39-48歲</option>
+                        <option value="49-59歲">🍷 49-59歲</option>
+                        <option value="60歲以上">👴 60歲以上</option>
+                    </select>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-submit" id="submitBtn">
+                ✨ 提交問卷 · 領優惠券 ✨
+            </button>
+            <div class="sweet-note">
+                🧁 每一份意見，都是我們更甜蜜的動力
+            </div>
+        </form>
     </div>
 </div>
 
 <script>
-    // ----- 完整保留原有功能邏輯 -----
     const LIFF_ID = '2009574561-O1KcpV0n';
     const GAS_URL = 'https://script.google.com/macros/s/AKfycbyTugMVmQ4dWa3DXvuXoZKHOsR5qtkXpbnzlLh0eN6Lel-SU4p7I3YOD2aGbdYnLPtR/exec';
     let userId = "";
@@ -368,8 +385,6 @@
         modal.classList.remove('active');
         if (typeof liff !== 'undefined' && liff.isInClient && liff.isInClient()) {
             liff.closeWindow();
-        } else {
-            window.close();
         }
     }
 
@@ -380,38 +395,9 @@
         } else {
             const profile = await liff.getProfile();
             userId = profile.userId;
-            fetchOptions();
-        }
-    }
-
-    async function fetchOptions() {
-        try {
-            const resp = await fetch(GAS_URL);
-            const data = await resp.json();
-            document.getElementById('actName').innerText = data.title || "一點甜試吃活動";
-            fillSelect('item', data.items);
-            fillSelect('visual', data.visuals);
-            fillSelect('texture', data.texture);
-            fillSelect('balance', data.balance);
-            fillSelect('identity', data.identity);
-            fillSelect('age', data.age);
-
             document.getElementById('loadingArea').style.display = 'none';
             document.getElementById('quizForm').style.display = 'block';
-        } catch (err) {
-            document.getElementById('loadingArea').innerHTML = '<p>🍂 無法載入問卷，請重新整理</p><button onclick="location.reload()" style="margin-top:12px;padding:8px 20px;border-radius:40px;border:none;background:#f4d1d7;color:#4a2a2a;cursor:pointer;">重新整理</button>';
         }
-    }
-
-    function fillSelect(id, list) {
-        const el = document.getElementById(id);
-        el.innerHTML = '<option value="" disabled selected>請選擇</option>';
-        if (!list || list.length === 0) return;
-        list.forEach(txt => {
-            const opt = document.createElement('option');
-            opt.value = opt.text = txt;
-            el.appendChild(opt);
-        });
     }
 
     document.getElementById('quizForm').onsubmit = async (e) => {
@@ -422,12 +408,12 @@
 
         const payload = {
             userId: userId,
-            activity: document.getElementById('actName').innerText,
+            activity: "一點甜 Gelato霜淇淋試吃回饋",
             item: document.getElementById('item').value,
             visual: document.getElementById('visual').value,
             texture: document.getElementById('texture').value,
             balance: document.getElementById('balance').value,
-            identity: document.getElementById('identity').value,
+            identity: document.getElementById('gender').value,
             age: document.getElementById('age').value
         };
 
@@ -437,9 +423,7 @@
                 mode: 'no-cors',
                 body: JSON.stringify(payload)
             });
-            
             showSuccessModal();
-            
         } catch (err) {
             alert('發送失敗，請稍後再試');
             submitBtn.disabled = false;
